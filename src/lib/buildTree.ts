@@ -1,4 +1,4 @@
-type FileNode = {
+export type FileNode = {
   name: string;
   path: string;
   children?: FileNode[] | null;
@@ -37,8 +37,8 @@ const buildTree = (files: { path: string }[]): FileNode => {
       return;
     }
     node.children.sort((a, b) => {
-      const aIsFolder = Array.isArray(a);
-      const bIsFolder = Array.isArray(b);
+      const aIsFolder = Array.isArray(a.children);
+      const bIsFolder = Array.isArray(b.children);
       if (aIsFolder !== bIsFolder) {
         return aIsFolder ? -1 : 1;
       } else {
