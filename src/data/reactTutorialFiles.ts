@@ -1,41 +1,29 @@
 export default [
   {
-    path: 'package.json',
+    path: 'app/package.json',
   },
   {
-    path: 'vite.config.ts',
+    path: 'app/vite.config.ts',
   },
   {
-    path: 'index.html',
+    path: 'app/index.html',
   },
   {
-    path: 'src',
+    path: 'app/src/main.tsx',
   },
   {
-    path: 'src/main.tsx',
+    path: 'app/src/App.tsx',
   },
   {
-    path: 'src/App.tsx',
+    path: 'app/src/components/Button.tsx',
   },
   {
-    path: 'src/components',
+    path: 'app/src/components/Header.tsx',
   },
   {
-    path: 'src/components/Button.tsx',
+    path: 'app/src/styles/global.css',
   },
   {
-    path: 'src/components/Header.tsx',
-  },
-  {
-    path: 'src/styles',
-  },
-  {
-    path: 'src/styles/global.css',
-  },
-  {
-    path: 'public',
-  },
-  {
-    path: 'public/favicon.ico',
+    path: 'app/public/favicon.ico',
   },
 ];
