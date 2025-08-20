@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { FileNode } from '../lib/buildTree';
 import { FileIcon } from './FileIcon';
+import ChevronIcon from './ChevronIcon';
 
 type FileTreeNodeProps = {
   file: FileNode;
@@ -7,21 +9,32 @@ type FileTreeNodeProps = {
 };
 
 const FileTreeNode = ({ file, depth = 0 }: FileTreeNodeProps) => {
+  const [isFolderExpanded, setIsFolderExpanded] = useState(true);
   const isFolder = Array.isArray(file.children) && file.children.length > 0;
 
   return (
     <div>
-      <div
-        className="flex items-center gap-1 hover:cursor-pointer"
+      <button
+        type="button"
+        onClick={() => {
+          isFolder && setIsFolderExpanded((prevExpanded) => !prevExpanded);
+        }}
+        className="flex w-full items-center gap-0.5 py-[1px] hover:cursor-pointer hover:bg-neutral-700/50"
         style={{ paddingLeft: `${depth / 2}rem` }}
+        aria-expanded={isFolder ? isFolderExpanded : undefined}
+        aria-controls={isFolder ? file.path : undefined}
       >
-        <div>
+        {isFolder ? (
+          <ChevronIcon open={isFolderExpanded} className="text-neutral-300" />
+        ) : (
           <FileIcon fileName={file.path} />
-        </div>
-        <div className="text-sm font-light text-gray-100">{file.name}</div>
-      </div>
+        )}
+
+        <span className="text-sm font-light text-neutral-300">{file.name}</span>
+      </button>
 
       {isFolder &&
+        isFolderExpanded &&
         file.children!.map((child) => (
           <FileTreeNode key={child.path} file={child} depth={depth + 1} />
         ))}
