@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useActivePath } from '../state/ActiveFileProvider';
+import { useFileActions } from '../state/ActiveFileProvider';
 import type { FileNode } from '../lib/buildTree';
 import { FileIcon } from './FileIcon';
 import ChevronIcon from './ChevronIcon';
@@ -9,17 +11,31 @@ type FileTreeNodeProps = {
 };
 
 const FileTreeNode = ({ file, depth = 0 }: FileTreeNodeProps) => {
+  const activePath = useActivePath();
+  const { openFile } = useFileActions();
   const [isFolderExpanded, setIsFolderExpanded] = useState(true);
   const isFolder = Array.isArray(file.children) && file.children.length > 0;
+  const isActive = activePath === file.path;
+
+  useEffect(() => {
+    // testing out the context
+    console.log('activePath', activePath);
+  }, [activePath]);
+
+  const handleActiveFileClick = (path: string) => {
+    openFile(path);
+  };
 
   return (
     <div>
       <button
         type="button"
         onClick={() => {
-          isFolder && setIsFolderExpanded((prevExpanded) => !prevExpanded);
+          isFolder
+            ? setIsFolderExpanded((prevExpanded) => !prevExpanded)
+            : handleActiveFileClick(file.path);
         }}
-        className="flex w-full items-center gap-0.5 py-[1px] hover:cursor-pointer hover:bg-neutral-700/50"
+        className={`flex w-full items-center gap-0.5 py-[1px] hover:cursor-pointer ${isActive ? 'bg-neutral-600/50' : 'hover:bg-neutral-700/50'}`}
         style={{ paddingLeft: `${depth / 2}rem` }}
         aria-expanded={isFolder ? isFolderExpanded : undefined}
         aria-controls={isFolder ? file.path : undefined}
