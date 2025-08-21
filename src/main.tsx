@@ -1,3 +1,4 @@
+import './lib/monaco/monacoSetup.ts';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './globals.css';
