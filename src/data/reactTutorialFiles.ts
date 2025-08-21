@@ -2,7 +2,7 @@ export default [
   {
     path: 'app/package.json',
     content: `{
-  "name": "file-viewer",
+  "name": "demo-project",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,10 +14,8 @@ export default [
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
-    "monaco-editor": "^0.52.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "seti-icons": "^0.0.4",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
@@ -34,7 +32,6 @@ export default [
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
-    "jiti": "^2.5.1",
     "prettier": "^3.6.2",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
@@ -64,7 +61,7 @@ export default defineConfig({
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link href="/src/globals.css" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>File Viewer Project</title>
+    <title>Demo Project</title>
   </head>
   <body>
     <div id="root"></div>
@@ -89,17 +86,15 @@ createRoot(document.getElementById('root')!).render(
   },
   {
     path: 'app/src/App.tsx',
-    content: `import ActiveFileProvider from './state/ActiveFileProvider';
-import FileTree from './components/FileTree';
-import reactTutorialFiles from './data/reactTutorialFiles';
-import buildTree from './lib/buildTree';
+    content: `import Button from './components/Button';
+import Header from './components/Header';
 
 function App() {
-  const rootNode = buildTree(reactTutorialFiles);
   return (
-    <ActiveFileProvider>
-      <FileTree rootNode={rootNode} />
-    </ActiveFileProvider>
+    <div>
+      <Header>My demo app</Header>
+      <Button>Press me</Button>
+    </div>
   );
 }
 

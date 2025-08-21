@@ -43,6 +43,13 @@ const Editor = ({
         minimap: { enabled: true },
         fontSize: 13,
         theme: 'vs-dark',
+
+        renderValidationDecorations: 'off',
+        lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.Off },
+        quickSuggestions: { other: false, comments: false, strings: false },
+        suggestOnTriggerCharacters: false,
+        wordBasedSuggestions: 'off',
+        parameterHints: { enabled: false },
       });
     }
 

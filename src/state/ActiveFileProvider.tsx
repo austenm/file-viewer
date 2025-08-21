@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import normalizePath from '../utils/normalizePath';
 
 type FileState = {
   activePath: string | null;
@@ -17,12 +18,6 @@ const ActiveFileProvider = ({ children }: { children: React.ReactNode }) => {
   const [activePath, setActivePath] = useState<string | null>(null);
 
   const fileState = useMemo<FileState>(() => ({ activePath }), [activePath]);
-
-  const normalizePath = (path: string) =>
-    path
-      .replace(/\\/g, '/') // all '\' replaced with '/'
-      .replace(/^\.\/+/, '') // remove './' from start of path
-      .replace(/\/+$/, ''); // remove trailing '/' from path
 
   const fileActions = useMemo<FileActions>(
     () => ({
