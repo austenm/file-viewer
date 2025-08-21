@@ -6,6 +6,7 @@ import FileTree from './components/FileTree';
 import reactTutorialFiles from './data/reactTutorialFiles';
 import buildTree from './lib/buildTree';
 import normalizePath from './utils/normalizePath';
+import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 
 function App() {
   const activePath = useActivePath();
@@ -25,17 +26,27 @@ function App() {
   const rootNode = buildTree(reactTutorialFiles);
 
   return (
-    <div className="grid grid-cols-4">
-      <aside className="overflow-auto col-span-1 min-h-0">
+    <PanelGroup
+      id="file-viewer-group"
+      direction="horizontal"
+      className="h-full"
+    >
+      <Panel
+        id="file-tree-panel"
+        className="min-h-0"
+        defaultSize={25}
+        minSize={10}
+      >
         <FileTree rootNode={rootNode} />
-      </aside>
-      <main className="col-span-3 min-h-0">
+      </Panel>
+      <PanelResizeHandle className="border-l-[0.5px] border-l-neutral-600" />
+      <Panel id="code-editor-panel" className="min-h-0" defaultSize={75}>
         <Editor
           path={activePath || 'app/package.json'}
           getContent={getContent}
         />
-      </main>
-    </div>
+      </Panel>
+    </PanelGroup>
   );
 }
 
