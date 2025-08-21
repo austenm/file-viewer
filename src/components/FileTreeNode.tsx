@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useActivePath } from '../state/ActiveFileProvider';
-import { useFileActions } from '../state/ActiveFileProvider';
+import { useState } from 'react';
+import { useActivePath, useFileActions } from '../state/ActiveFileProvider';
 import type { FileNode } from '../lib/buildTree';
 import { FileIcon } from './FileIcon';
 import ChevronIcon from './ChevronIcon';
@@ -17,15 +16,6 @@ const FileTreeNode = ({ file, depth = 0 }: FileTreeNodeProps) => {
   const isFolder = Array.isArray(file.children) && file.children.length > 0;
   const isActive = activePath === file.path;
 
-  useEffect(() => {
-    // testing out the context
-    console.log('activePath', activePath);
-  }, [activePath]);
-
-  const handleActiveFileClick = (path: string) => {
-    openFile(path);
-  };
-
   return (
     <div>
       <button
@@ -33,7 +23,7 @@ const FileTreeNode = ({ file, depth = 0 }: FileTreeNodeProps) => {
         onClick={() => {
           isFolder
             ? setIsFolderExpanded((prevExpanded) => !prevExpanded)
-            : handleActiveFileClick(file.path);
+            : openFile(file.path);
         }}
         className={`flex w-full items-center gap-0.5 py-[1px] hover:cursor-pointer ${isActive ? 'bg-neutral-600/50' : 'hover:bg-neutral-700/50'}`}
         style={{ paddingLeft: `${depth / 2}rem` }}
@@ -46,7 +36,9 @@ const FileTreeNode = ({ file, depth = 0 }: FileTreeNodeProps) => {
           <FileIcon fileName={file.path} />
         )}
 
-        <span className="text-sm font-light text-neutral-300">{file.name}</span>
+        <span className="text-[0.82rem] font-light text-neutral-300">
+          {file.name}
+        </span>
       </button>
 
       {isFolder &&
