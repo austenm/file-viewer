@@ -31,10 +31,13 @@ monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
   allowNonTsExtensions: true,
   jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
   target: monaco.languages.typescript.ScriptTarget.ESNext,
+  module: monaco.languages.typescript.ModuleKind.ESNext,
   moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
 });
 
-monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-  allowNonTsExtensions: true,
-  jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
+monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+  noSemanticValidation: true,
+  noSyntaxValidation: false,
 });
+
+monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
