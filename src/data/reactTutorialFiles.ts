@@ -61,7 +61,7 @@ export default defineConfig({
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/folder-tree.svg" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link href="/src/globals.css" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>File Viewer Project</title>
@@ -108,7 +108,9 @@ export default App;
   },
   {
     path: 'app/src/components/Button.tsx',
-    content: `const Button = ({
+    content: `import React from 'react';
+    
+const Button = ({
   children,
   className,
 }: {
@@ -136,7 +138,9 @@ export default Button;
   },
   {
     path: 'app/src/components/Header.tsx',
-    content: `export enum HeaderLevel {
+    content: `import React from 'react';
+    
+export enum HeaderLevel {
   h1 = 'h1',
   h2 = 'h2',
   h3 = 'h3',
@@ -169,11 +173,10 @@ export default Header;
   },
   {
     path: 'app/public/favicon.svg',
-    content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
-    stroke="#34eb58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 
-    0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/><path d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 
-    0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 
-    0 0 1 1Z"/><path d="M3 5a2 2 0 0 0 2 2h3"/><path d="M3 3v13a2 2 0 0 0 2 2h3"/></svg>`,
+    content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#34eb58" 
+stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/>
+<path d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/>
+<path d="M3 5a2 2 0 0 0 2 2h3"/><path d="M3 3v13a2 2 0 0 0 2 2h3"/></svg>`,
   },
 ];
