@@ -13,7 +13,7 @@ function App() {
   const { openFile } = useFileActions();
 
   useEffect(() => {
-    if (!activePath) openFile('app/package.json');
+    if (!activePath) openFile('app/README.md');
   }, []);
 
   const getContent = (path: string) => {
