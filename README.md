@@ -4,7 +4,7 @@ A small file viewer inspired by the CoderPad “File Tree” prompt, with a mode
 
 ## Demo
 
-> [](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTk4dmM0cmtwZXJleXZ4bm5qN2l5ZmN6Y3U4Nm5nYm1nODhkdXV3ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IxIVBjD6c2neTazyXz/giphy.gif)  
+> ![](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTk4dmM0cmtwZXJleXZ4bm5qN2l5ZmN6Y3U4Nm5nYm1nODhkdXV3ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IxIVBjD6c2neTazyXz/giphy.gif)  
 > [Link to live example](https://file-viewer-topaz.vercel.app/)
 
 ## Stack
