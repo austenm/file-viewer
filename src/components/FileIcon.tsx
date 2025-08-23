@@ -53,4 +53,6 @@ const _FileIcon: React.FC<FileIconProps> = ({
   );
 };
 
-export const FileIcon = React.memo(_FileIcon);
+const FileIcon = React.memo(_FileIcon);
+
+export default FileIcon;
