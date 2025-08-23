@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useActivePath, useFileActions } from '../state/ActiveFileProvider';
 import type { FileNode } from '../lib/buildTree';
-import { FileIcon } from './FileIcon';
+import FileIcon from './FileIcon';
 import ChevronIcon from './ChevronIcon';
 
 type FileTreeNodeProps = {

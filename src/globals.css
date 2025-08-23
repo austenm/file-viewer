@@ -1,1 +1,33 @@
 @import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    /* background: rgba(200, 200, 200, 0.5); */
+    background: transparent;
+  }
+
+  .scrollbar-div:hover::-webkit-scrollbar-thumb {
+    background: rgba(200, 200, 200, 0.25);
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(200, 200, 200, 0.25);
+  }
+}
