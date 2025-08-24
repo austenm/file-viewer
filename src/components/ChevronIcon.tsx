@@ -1,30 +1,34 @@
 import React from 'react';
 import { cn } from '../utils/cn';
 
-type ChevronIconProps = React.SVGProps<SVGSVGElement> & { open?: boolean };
+type ChevronIconProps = React.SVGProps<SVGSVGElement> & {
+  expanded?: boolean;
+  size?: number;
+  strokeWidth?: number;
+};
 
 const ChevronIcon = ({
-  open = false,
+  expanded = false,
+  size = 14,
+  strokeWidth = 2,
   className = '',
   ...props
 }: ChevronIconProps) => {
-  const rotate = open ? 'rotate-90' : '';
   return (
     <svg
-      viewBox="0 0 20 20"
       aria-hidden="true"
-      className={`h-4 w-4 ${rotate} ${className}`}
+      viewBox="0 0 20 20"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className={cn('shrink-0', expanded ? 'rotate-90' : '', className)}
       {...props}
     >
-      <path
-        d="M7 5l6 5-6 5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M7 5l6 5-6 5" />
     </svg>
   );
 };
