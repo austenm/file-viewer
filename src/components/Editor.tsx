@@ -1,39 +1,15 @@
 import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
+import { getContent } from '../lib/contentStore';
+import { pathToUri, langFromExt } from '../lib/monaco/model-utils';
 
-const langFromExt = (path: string) => {
-  const ext = (path.split('.').pop() || '').toLowerCase();
-  switch (ext) {
-    case 'ts':
-    case 'tsx':
-      return 'typescript';
-    case 'js':
-    case 'jsx':
-      return 'javascript';
-    case 'json':
-      return 'json';
-    case 'md':
-      return 'markdown';
-    case 'css':
-      return 'css';
-    case 'html':
-      return 'html';
-  }
-};
-
-const Editor = ({
-  path,
-  getContent,
-}: {
-  path: string;
-  getContent: (p: string) => string;
-}) => {
+const Editor = ({ activePath }: { activePath: string }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !path) return;
+    if (!container || !activePath) return;
 
     // if no editor ref, create new
     if (!editorRef.current) {
@@ -54,10 +30,10 @@ const Editor = ({
     }
 
     // set up language model when filepath/content changes
-    const uri = monaco.Uri.parse(`inmem:/${encodeURI(path)}`);
+    const uri = pathToUri(activePath);
     const model = monaco.editor.createModel(
-      getContent(path),
-      langFromExt(path),
+      getContent(activePath),
+      langFromExt(activePath),
       uri,
     );
     editorRef.current.setModel(model);
@@ -69,7 +45,7 @@ const Editor = ({
         editorRef.current = null;
       }
     };
-  }, [path, getContent]);
+  }, [activePath]);
 
   return (
     <div
