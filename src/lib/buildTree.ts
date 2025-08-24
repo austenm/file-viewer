@@ -1,8 +1,4 @@
-export type FileNode = {
-  name: string;
-  path: string;
-  children?: FileNode[] | null;
-};
+import type { FileNode } from '../utils/types';
 
 const buildTree = (files: { path: string }[]): FileNode => {
   const root: FileNode = { name: '__root__', path: '', children: [] };

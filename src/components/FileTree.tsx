@@ -1,4 +1,4 @@
-import type { FileNode } from '../lib/buildTree';
+import type { FileNode } from '../utils/types';
 import FileTreeNode from './FileTreeNode';
 
 const FileTree = ({ rootNode }: { rootNode: FileNode }) => {
