@@ -5,7 +5,6 @@ import Editor from './components/Editor';
 import FileTree from './components/FileTree';
 import reactTutorialFiles from './data/reactTutorialFiles';
 import buildTree from './lib/buildTree';
-import normalizePath from './utils/normalizePath';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 
 function App() {
@@ -15,13 +14,6 @@ function App() {
   useEffect(() => {
     if (!activePath) openFile('app/README.md');
   }, []);
-
-  const getContent = (path: string) => {
-    const normPath = normalizePath(path);
-    return (
-      reactTutorialFiles.find((file) => file.path === normPath)?.content ?? ''
-    );
-  };
 
   const rootNode = buildTree(reactTutorialFiles);
 
