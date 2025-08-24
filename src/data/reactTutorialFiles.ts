@@ -247,11 +247,33 @@ Note on Monaco: the worker setup lives in lib/monaco/setup.ts and is imported fi
 
 - [ ] Add / edit / save files (mirror Monaco models → contentStore, optional localStorage)
 
-- [ ] Multiple tabs with close/neighbor-select behavior
+- [X] Multiple tabs with close/neighbor-select behavior
 
 - [ ] More file types (extend langFromExt)
 
 - [ ] Optional semantic typechecking in Monaco with virtual .d.ts shims
 `,
+  },
+  {
+    path: 'app/src/components/folder/another-folder/ComponentWithAReallyLongNameToTestTruncation.tsx',
+    content: `import React from 'react';
+import Button from './Button';
+import Header from './Header';
+
+const Component = ({ callback }: { callback: () => void }) => {
+  const handleClick = () => {
+    console.log('ok');
+    callback();
+  }
+  return (
+    <div>
+      <Header>Long name component</Header>
+      <Button onClick={handleClick}>Yes, now do callback</Button>
+    </div>
+  )
+}
+
+export default Component;
+    `,
   },
 ];

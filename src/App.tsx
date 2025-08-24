@@ -1,5 +1,6 @@
 import { useFileState } from './state/ActiveFileProvider';
 import { Editor, EmptyEditor, FileTree, Tabs } from './components';
+import Breadcrumbs from './components/Breadcrumbs';
 import reactTutorialFiles from './data/reactTutorialFiles';
 import buildTree from './lib/buildTree';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
@@ -30,6 +31,7 @@ function App() {
         ) : (
           <div className="flex flex-col h-full w-full min-h-0">
             <Tabs />
+            <Breadcrumbs path={activePath!} />
             <Editor activePath={activePath!} />
           </div>
         )}
