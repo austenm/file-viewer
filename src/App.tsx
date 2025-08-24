@@ -1,19 +1,11 @@
-import { useEffect } from 'react';
-import { useActivePath } from './state/ActiveFileProvider';
-import { useFileActions } from './state/ActiveFileProvider';
-import Editor from './components/Editor';
-import FileTree from './components/FileTree';
+import { useFileState } from './state/ActiveFileProvider';
+import { Editor, EmptyEditor, FileTree, Tabs } from './components';
 import reactTutorialFiles from './data/reactTutorialFiles';
 import buildTree from './lib/buildTree';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 
 function App() {
-  const activePath = useActivePath();
-  const { openFile } = useFileActions();
-
-  useEffect(() => {
-    if (!activePath) openFile('app/README.md');
-  }, []);
+  const { activePath, openPaths } = useFileState();
 
   const rootNode = buildTree(reactTutorialFiles);
 
@@ -33,7 +25,14 @@ function App() {
       </Panel>
       <PanelResizeHandle className="border-l-[0.5px] border-l-neutral-600" />
       <Panel id="code-editor-panel" className="min-h-0" defaultSize={75}>
-        <Editor activePath={activePath!} />
+        {activePath === null && openPaths.length === 0 ? (
+          <EmptyEditor />
+        ) : (
+          <div className="flex flex-col h-full w-full min-h-0">
+            <Tabs />
+            <Editor activePath={activePath!} />
+          </div>
+        )}
       </Panel>
     </PanelGroup>
   );
