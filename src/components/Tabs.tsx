@@ -2,6 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { useFileState, useFileActions } from '../state/ActiveFileProvider';
 import FileIcon from './FileIcon';
 import CloseIcon from './CloseIcon';
+import { cn } from '../utils/cn';
 
 const fileName = (p: string) => p.split('/').pop() || p;
 
@@ -29,13 +30,13 @@ const Tab = memo(({ path, active, onSelect, onClose }: TabProps) => {
       title={path}
       tabIndex={active ? 0 : -1}
       onClick={handleSelect}
-      className={[
-        'group flex items-center gap-1.5 p-1.5 border-r border-neutral-600',
+      className={cn(
+        'group flex items-center gap-1.5 p-1.5 border-r border-[#2a2a2a] select-none',
         active
-          ? 'bg-neutral-900 text-neutral-100'
-          : 'bg-neutral-800 text-neutral-300',
-        'hover:cursor-pointer  focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500/60',
-      ].join(' ')}
+          ? 'bg-[#1e1e1e] text-neutral-300'
+          : 'bg-[#252526] text-neutral-400',
+        'hover:cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500/60',
+      )}
       onKeyDown={(e) => {
         if (e.key === 'enter' || e.key === ' ') {
           e.preventDefault();
@@ -50,18 +51,18 @@ const Tab = memo(({ path, active, onSelect, onClose }: TabProps) => {
       }}
     >
       <FileIcon fileName={path} />
-      <span className="truncate max-w-[14rem] min-w-0 text-[0.82rem] -ml-0.5">
+      <span className="truncate max-w-[12rem] min-w-0 text-[0.82rem] -ml-0.5">
         {fileName(path)}
       </span>
 
       <button
         aria-label={`Close ${fileName(path)}`}
-        className={[
-          '-mr-0.5 p-1 rounded-md',
+        className={cn(
+          '-mr-0.5 p-1 rounded-md hover:bg-neutral-700 hover:text-neutral-300 hover:cursor-pointer',
           'hover:bg-neutral-700 hover:text-neutral-100 hover:cursor-pointer',
           active ? 'text-neutral-900' : 'text-neutral-800',
-          'group-hover:text-neutral-300',
-        ].join(' ')}
+          'group-hover:text-neutral-400',
+        )}
         onClick={handleClose}
       >
         <CloseIcon size={14} />
