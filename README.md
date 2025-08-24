@@ -74,7 +74,7 @@ Note on Monaco: the worker setup lives in lib/monaco/setup.ts and is imported fi
 
 - [ ] Add / edit / save files (mirror Monaco models → contentStore, optional localStorage)
 
-- [ ] Multiple tabs with close/neighbor-select behavior
+- [X] Multiple tabs with close/neighbor-select behavior
 
 - [ ] More file types (extend langFromExt)
 
