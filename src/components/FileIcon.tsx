@@ -1,6 +1,7 @@
 import React from 'react';
 import { themeIcons } from 'seti-icons';
 import '../icons.css';
+import { cn } from '../utils/cn';
 
 interface FileIconProps {
   fileName: string;
@@ -40,7 +41,7 @@ const _FileIcon: React.FC<FileIconProps> = ({
       aria-hidden={title ? undefined : true}
       role="img"
       title={title}
-      className={['file-icon', className].filter(Boolean).join(' ')}
+      className={cn('file-icon', className)}
       style={{
         width: dim,
         height: dim,
