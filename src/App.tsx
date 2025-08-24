@@ -45,6 +45,7 @@ function App() {
           path={activePath || 'app/package.json'}
           getContent={getContent}
         />
+          <Editor activePath={activePath!} />
       </Panel>
     </PanelGroup>
   );
