@@ -12,22 +12,29 @@ body {
 @layer utilities {
   .scrollbar::-webkit-scrollbar {
     height: 4px;
+    width: 4px;
   }
 
   .scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgb(30, 30, 30);
   }
 
   .scrollbar::-webkit-scrollbar-thumb {
-    /* background: rgba(200, 200, 200, 0.5); */
     background: transparent;
+    border-radius: 999px;
   }
 
-  .scrollbar-div:hover::-webkit-scrollbar-thumb {
+  .scrollbar--hover::-webkit-scrollbar-thumb {
     background: rgba(200, 200, 200, 0.25);
   }
 
-  .scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(200, 200, 200, 0.25);
+  /* firefox */
+  .is-firefox .scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent rgb(30, 30, 30);
+  }
+
+  .is-firefox .scrollbar--hover {
+    scrollbar-color: rgba(200, 200, 200, 0.25) rgb(30, 30, 30);
   }
 }

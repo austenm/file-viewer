@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { useFileState, useFileActions } from '../state/ActiveFileProvider';
 import FileIcon from './FileIcon';
 import CloseIcon from './CloseIcon';
@@ -59,7 +59,6 @@ const Tab = memo(({ path, active, onSelect, onClose }: TabProps) => {
         aria-label={`Close ${fileName(path)}`}
         className={cn(
           '-mr-0.5 p-1 rounded-md hover:bg-neutral-700 hover:text-neutral-300 hover:cursor-pointer',
-          'hover:bg-neutral-700 hover:text-neutral-100 hover:cursor-pointer',
           active ? 'text-neutral-900' : 'text-neutral-800',
           'group-hover:text-neutral-400',
         )}
@@ -74,13 +73,19 @@ const Tab = memo(({ path, active, onSelect, onClose }: TabProps) => {
 const Tabs = () => {
   const { openPaths, activePath } = useFileState();
   const { setActivePath, closeFile } = useFileActions();
+  const [isHovering, setIsHovering] = useState(false);
 
   if (openPaths.length === 0) return null;
 
   return (
     <div
       role="tablist"
-      className="scrollbar scrollbar-div flex overflow-auto bg-neutral-900 min-w-0 whitespace-nowrap"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      className={cn(
+        'scrollbar flex overflow-x-auto overflow-y-hidden bg-neutral-800 min-w-0 whitespace-nowrap',
+        isHovering && 'scrollbar--hover',
+      )}
       onWheel={(e) => {
         if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
           e.currentTarget.scrollLeft += e.deltaY;
