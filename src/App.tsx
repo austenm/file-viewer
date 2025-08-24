@@ -41,11 +41,7 @@ function App() {
       </Panel>
       <PanelResizeHandle className="border-l-[0.5px] border-l-neutral-600" />
       <Panel id="code-editor-panel" className="min-h-0" defaultSize={75}>
-        <Editor
-          path={activePath || 'app/package.json'}
-          getContent={getContent}
-        />
-          <Editor activePath={activePath!} />
+        <Editor activePath={activePath!} />
       </Panel>
     </PanelGroup>
   );
