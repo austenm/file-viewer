@@ -31,7 +31,10 @@ const FileTreeNode = ({ file, depth = 0 }: FileTreeNodeProps) => {
         aria-controls={isFolder ? file.path : undefined}
       >
         {isFolder ? (
-          <ChevronIcon open={isFolderExpanded} className="text-neutral-300" />
+          <ChevronIcon
+            expanded={isFolderExpanded}
+            className="text-neutral-300"
+          />
         ) : (
           <FileIcon fileName={file.path} />
         )}
