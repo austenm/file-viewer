@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
-    "composite": true,
+    "composite": false,
     "noEmit": true,
     "types": ["vitest/globals", "@testing-library/jest-dom", "vite/client"]
   },
