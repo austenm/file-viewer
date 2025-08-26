@@ -5,7 +5,7 @@ const FileTree = ({ rootNode }: { rootNode: FileNode }) => {
   return (
     <div className="h-full border border-r bg-neutral-800">
       <div className="mb-1 text-xl text-neutral-300">Files</div>
-      <div>
+      <div role="tree" aria-label="Files">
         {rootNode.children?.map((child) => (
           <FileTreeNode key={child.path} file={child} />
         ))}
