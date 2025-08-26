@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { getContent } from '../lib/contentStore';
 import { pathToUri, langFromExt } from '../lib/monaco/model-utils';
+import { tabIdFromPath } from '../utils/ids';
 
 const Editor = ({ activePath }: { activePath: string }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -21,7 +22,9 @@ const Editor = ({ activePath }: { activePath: string }) => {
         theme: 'vs-dark',
 
         renderValidationDecorations: 'off',
-        lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.Off },
+        lightbulb: {
+          enabled: (monaco as any).editor?.ShowLightbulbIconMode?.Off,
+        },
         quickSuggestions: { other: false, comments: false, strings: false },
         suggestOnTriggerCharacters: false,
         wordBasedSuggestions: 'off',
@@ -49,7 +52,9 @@ const Editor = ({ activePath }: { activePath: string }) => {
 
   return (
     <div
-      role="text editor"
+      role="tabpanel"
+      id="editor-panel"
+      aria-labelledby={tabIdFromPath(activePath)}
       ref={containerRef}
       className="h-full w-full min-h-0"
     />
