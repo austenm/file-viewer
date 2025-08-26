@@ -3,9 +3,9 @@ import { useFileState, useFileActions } from '../state/ActiveFileProvider';
 import FileIcon from './FileIcon';
 import CloseIcon from './CloseIcon';
 import { cn } from '../utils/cn';
+import { tabIdFromPath } from '../utils/ids';
 
 const fileName = (p: string) => p.split('/').pop() || p;
-const tabIdFromPath = (p: string) => 'tab-' + p.replace(/[^a-zA-Z0-9_-]/g, '-');
 
 type TabProps = {
   path: string;
