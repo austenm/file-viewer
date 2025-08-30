@@ -29,42 +29,57 @@ const Tab = memo(
     );
 
     return (
-      <button
-        ref={ref}
-        type="button"
-        id={tabIdFromPath(path)}
-        role="tab"
-        aria-selected={active}
-        aria-controls="editor-panel"
-        title={path}
-        tabIndex={active ? 0 : -1}
-        onClick={handleSelect}
+      <div
+        role="presentation"
         className={cn(
           'group flex items-center gap-1.5 p-1.5 border-r border-[#2a2a2a] select-none',
           active
             ? 'bg-[#1e1e1e] text-neutral-300'
             : 'bg-[#252526] text-neutral-400',
-          'hover:cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500/60',
         )}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onSelect(path);
-          }
-        }}
-        onAuxClick={(e) => {
-          if (e.button === 1) {
-            e.preventDefault();
-            onClose(path);
-          }
-        }}
       >
-        <FileIcon fileName={path} />
-        <span className="truncate max-w-[12rem] min-w-0 text-[0.82rem] -ml-0.5">
-          {fileName(path)}
-        </span>
-
         <button
+          ref={ref}
+          type="button"
+          id={tabIdFromPath(path)}
+          role="tab"
+          aria-selected={active}
+          aria-controls="editor-panel"
+          title={path}
+          tabIndex={active ? 0 : -1}
+          onClick={handleSelect}
+          className={cn(
+            'flex items-center gap-1.5 -ml-0.5 pr-0.5',
+            'hover:cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500/60',
+          )}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelect(path);
+            }
+            if (
+              e.key === 'Delete' ||
+              ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W'))
+            ) {
+              e.preventDefault();
+              onClose(path);
+            }
+          }}
+          onAuxClick={(e) => {
+            if (e.button === 1) {
+              e.preventDefault();
+              onClose(path);
+            }
+          }}
+        >
+          <FileIcon fileName={path} />
+          <span className="truncate max-w-[12rem] min-w-0 text-[0.82rem] -ml-0.5">
+            {fileName(path)}
+          </span>
+        </button>
+        <button
+          type="button"
+          tabIndex={-1}
           aria-label={`Close ${fileName(path)}`}
           className={cn(
             '-mr-0.5 p-1 rounded-md hover:bg-neutral-700 hover:text-neutral-300 hover:cursor-pointer',
@@ -75,7 +90,7 @@ const Tab = memo(
         >
           <CloseIcon size={14} />
         </button>
-      </button>
+      </div>
     );
   }),
 );
@@ -152,5 +167,5 @@ const Tabs = () => {
   );
 };
 
-export { Tab, tabIdFromPath };
+export { Tab };
 export default Tabs;
