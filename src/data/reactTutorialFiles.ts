@@ -1,7 +1,9 @@
-export default [
-  {
-    path: 'app/package.json',
-    content: `{
+export default {
+  name: 'react-tutorial',
+  files: [
+    {
+      path: 'app/package.json',
+      content: `{
   "name": "demo-project",
   "private": true,
   "version": "0.0.0",
@@ -39,10 +41,10 @@ export default [
   }
 }
 `,
-  },
-  {
-    path: 'app/vite.config.ts',
-    content: `import { defineConfig } from 'vite';
+    },
+    {
+      path: 'app/vite.config.ts',
+      content: `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -51,10 +53,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
 });
 `,
-  },
-  {
-    path: 'app/index.html',
-    content: `<!doctype html>
+    },
+    {
+      path: 'app/index.html',
+      content: `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -69,10 +71,10 @@ export default defineConfig({
   </body>
 </html>
 `,
-  },
-  {
-    path: 'app/src/main.tsx',
-    content: `import { StrictMode } from 'react';
+    },
+    {
+      path: 'app/src/main.tsx',
+      content: `import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './globals.css';
 import App from './App.tsx';
@@ -83,10 +85,10 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 `,
-  },
-  {
-    path: 'app/src/App.tsx',
-    content: `import Button from './components/Button';
+    },
+    {
+      path: 'app/src/App.tsx',
+      content: `import Button from './components/Button';
 import Header from './components/Header';
 
 function App() {
@@ -100,11 +102,11 @@ function App() {
 
 export default App;
 `,
-  },
-  {
-    path: 'app/src/components/Button.tsx',
-    content: `import React from 'react';
-    
+    },
+    {
+      path: 'app/src/components/Button.tsx',
+      content: `import React from 'react';
+
 const Button = ({
   children,
   className,
@@ -130,11 +132,11 @@ const Button = ({
 export default Button;
 
 `,
-  },
-  {
-    path: 'app/src/components/Header.tsx',
-    content: `import React from 'react';
-    
+    },
+    {
+      path: 'app/src/components/Header.tsx',
+      content: `import React from 'react';
+
 export enum HeaderLevel {
   h1 = 'h1',
   h2 = 'h2',
@@ -160,23 +162,23 @@ const Header = ({
 
 export default Header;
 `,
-  },
-  {
-    path: 'app/src/styles/global.css',
-    content: `@import 'tailwindcss';
+    },
+    {
+      path: 'app/src/styles/global.css',
+      content: `@import 'tailwindcss';
     `,
-  },
-  {
-    path: 'app/public/favicon.svg',
-    content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#34eb58" 
+    },
+    {
+      path: 'app/public/favicon.svg',
+      content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#34eb58"
 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 <path d="M20 10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2.5a1 1 0 0 1-.8-.4l-.9-1.2A1 1 0 0 0 15 3h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/>
 <path d="M20 21a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1h-2.9a1 1 0 0 1-.88-.55l-.42-.85a1 1 0 0 0-.92-.6H13a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1Z"/>
 <path d="M3 5a2 2 0 0 0 2 2h3"/><path d="M3 3v13a2 2 0 0 0 2 2h3"/></svg>`,
-  },
-  {
-    path: 'app/README.md',
-    content: `# file-viewer (VS-style)
+    },
+    {
+      path: 'app/README.md',
+      content: `# file-viewer (VS-style)
 
 A small file viewer inspired by the CoderPad “File Tree” prompt, with a modern stack and nicer UX.
 
@@ -253,10 +255,10 @@ Note on Monaco: the worker setup lives in lib/monaco/setup.ts and is imported fi
 
 - [ ] Optional semantic typechecking in Monaco with virtual .d.ts shims
 `,
-  },
-  {
-    path: 'app/src/components/folder/another-folder/ComponentWithAReallyLongNameToTestTruncation.tsx',
-    content: `import React from 'react';
+    },
+    {
+      path: 'app/src/components/folder/another-folder/ComponentWithAReallyLongNameToTestTruncation.tsx',
+      content: `import React from 'react';
 import Button from './Button';
 import Header from './Header';
 
@@ -275,5 +277,6 @@ const Component = ({ callback }: { callback: () => void }) => {
 
 export default Component;
     `,
-  },
-];
+    },
+  ],
+};
