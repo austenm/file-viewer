@@ -8,7 +8,7 @@ import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 function App() {
   const { activePath, openPaths } = useFileState();
 
-  const rootNode = buildTree(reactTutorialFiles);
+  const rootNode = buildTree(reactTutorialFiles.files);
 
   return (
     <PanelGroup
@@ -22,7 +22,7 @@ function App() {
         defaultSize={25}
         minSize={10}
       >
-        <FileTree rootNode={rootNode} />
+        <FileTree projectName={reactTutorialFiles.name} rootNode={rootNode} />
       </Panel>
       <PanelResizeHandle className="border-l-[0.5px] border-l-neutral-600" />
       <Panel id="code-editor-panel" className="min-h-0" defaultSize={75}>
