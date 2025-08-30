@@ -39,6 +39,7 @@ const FileTree = ({
 }) => {
   const { openFile, setTreeFocusPath, toggleExpanded } = useFileActions();
   const { expandedPaths, treeFocusPath } = useFileState();
+  const rowRefs = useRef(new Map<string, HTMLDivElement>());
 
   const flat = useMemo(
     () => visibleNodes(rootNode, expandedPaths),
@@ -55,6 +56,37 @@ const FileTree = ({
     return { indexByPath, parentMap };
   }, [flat]);
 
+  const firstChildIndex = (i: number) =>
+    flat[i + 1]?.parent === flat[i].path ? i + 1 : null;
+
+  const isDescendant = (p: string, anc: string) =>
+    p !== anc && p.startsWith(anc + '/');
+
+  const registerRowRef = (path: string) => (el: HTMLDivElement | null) => {
+    if (el) rowRefs.current.set(path, el);
+    else rowRefs.current.delete(path);
+  };
+
+  useEffect(() => {
+    if (!treeFocusPath && flat.length) setTreeFocusPath(flat[0].path);
+  }, [treeFocusPath, flat, setTreeFocusPath]);
+
+  useEffect(() => {
+    if (treeFocusPath) {
+      const el = rowRefs.current.get(treeFocusPath);
+      el?.focus();
+    }
+  }, [treeFocusPath]);
+
+  const focusByIndex = (i: number) => {
+    const path = flat[i]?.path;
+    if (!path) return;
+    setTreeFocusPath(path);
+    const el = rowRefs.current.get(path);
+    requestAnimationFrame(() => el?.focus());
+    el?.scrollIntoView?.({ block: 'nearest' });
+  };
+
   return (
     <div className="h-full border border-r bg-neutral-800">
       <div className="mb-1 font-bold text-[0.82rem] text-neutral-300">
@@ -63,8 +95,72 @@ const FileTree = ({
       <div
         role="tree"
         aria-label="Files"
+        onKeyDown={(e) => {
+          if (!flat.length) return;
+          const i = indexByPath.get(treeFocusPath ?? '') ?? 0;
+          const node = flat[i];
+          const last = flat.length - 1;
+          const expanded = expandedPaths.has(node.path);
+
+          switch (e.key) {
+            case 'ArrowDown':
+              e.preventDefault();
+              focusByIndex(Math.min(i + 1, last));
+              break;
+            case 'ArrowUp':
+              e.preventDefault();
+              focusByIndex(Math.max(i - 1, 0));
+              break;
+            case 'Home':
+              e.preventDefault();
+              focusByIndex(0);
+              break;
+            case 'End':
+              e.preventDefault();
+              focusByIndex(last);
+              break;
+            case 'ArrowLeft':
+              e.preventDefault();
+              if (node.isDir && expanded) {
+                toggleExpanded(node.path);
+                requestAnimationFrame(() =>
+                  rowRefs.current.get(node.path)?.focus(),
+                );
+              } else {
+                const parent = parentMap.get(node.path);
+                if (parent) {
+                  setTreeFocusPath(parent);
+                  requestAnimationFrame(() =>
+                    rowRefs.current.get(parent)?.focus(),
+                  );
+                }
+              }
+              break;
+            case 'ArrowRight':
+              e.preventDefault();
+              if (node.isDir && !expanded) {
+                toggleExpanded(node.path);
+              } else if (node.isDir) {
+                const child = firstChildIndex(i);
+                if (child !== null) focusByIndex(child);
+              }
+              break;
+            case 'Enter':
+            case ' ':
+              e.preventDefault();
+              if (node.isDir) toggleExpanded(node.path);
+              else openFile(node.path);
+              break;
+          }
+        }}
+      >
         {rootNode.children?.map((child) => (
-          <FileTreeNode key={child.path} file={child} />
+          <FileTreeNode
+            key={child.path}
+            file={child}
+            expandedPaths={expandedPaths}
+            registerForPath={registerRowRef}
+          />
         ))}
       </div>
     </div>
