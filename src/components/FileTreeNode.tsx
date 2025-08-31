@@ -46,6 +46,7 @@ const FileTreeNode = ({
         className={cn(
           'flex w-full items-center gap-0.5 py-[1px] hover:cursor-pointer',
           isActive ? 'bg-neutral-600/50' : 'hover:bg-neutral-700/50',
+          isFocused && 'outline-2 outline-neutral-500/60',
         )}
         style={{ paddingLeft: `${depth / 2}rem` }}
         title={file.path}
