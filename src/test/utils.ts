@@ -25,3 +25,9 @@ export const expectOneTabbable = () => {
 };
 export const getSelected = () =>
   getItems().filter((el) => el.getAttribute('aria-selected') === 'true');
+
+export const getTabs = () =>
+  screen.getByRole('tablist', { name: /open files/i });
+export const getAllTabs = () => within(getTabs()).getAllByRole('tab');
+export const oneTabbable = () =>
+  getAllTabs().filter((el) => (el as HTMLElement).tabIndex === 0);

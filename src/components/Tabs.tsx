@@ -1,4 +1,11 @@
-import React, { memo, forwardRef, useCallback, useRef, useState } from 'react';
+import React, {
+  memo,
+  forwardRef,
+  useCallback,
+  useRef,
+  useState,
+  useEffect,
+} from 'react';
 import { useFileState, useFileActions } from '../state/ActiveFileProvider';
 import FileIcon from './FileIcon';
 import CloseIcon from './CloseIcon';
@@ -10,13 +17,22 @@ const fileName = (p: string) => p.split('/').pop() || p;
 type TabProps = {
   path: string;
   active: boolean;
+  tabFocusPath: string | null;
   onSelect: (path: string) => void;
   onClose: (path: string) => void;
+  setTabFocusPath: (path: string) => void;
 };
 
 const Tab = memo(
   forwardRef<HTMLButtonElement, TabProps>(function Tab(
-    { path, active, onSelect, onClose }: TabProps,
+    {
+      path,
+      active,
+      tabFocusPath,
+      onSelect,
+      onClose,
+      setTabFocusPath,
+    }: TabProps,
     ref,
   ) {
     const handleSelect = useCallback(() => onSelect(path), [onSelect, path]);
@@ -45,8 +61,11 @@ const Tab = memo(
           role="tab"
           aria-selected={active}
           aria-controls="editor-panel"
+          aria-label={path}
+          aria-current={active ? 'page' : undefined}
           title={path}
-          tabIndex={active ? 0 : -1}
+          tabIndex={tabFocusPath === path ? 0 : -1}
+          onFocus={() => setTabFocusPath(path)}
           onClick={handleSelect}
           className={cn(
             'flex items-center gap-1.5 -ml-0.5 pr-0.5',
@@ -99,7 +118,44 @@ const Tabs = () => {
   const { openPaths, activePath } = useFileState();
   const { setActivePath, closeFile } = useFileActions();
   const [isHovering, setIsHovering] = useState(false);
-  const tabRefs = useRef<HTMLButtonElement[]>([]);
+  const tabRefs = useRef(new Map<string, HTMLButtonElement>());
+  const [tabFocusPath, setTabFocusPath] = useState<string | null>(
+    activePath ?? openPaths[0] ?? null,
+  );
+
+  const handleSelect = (path: string) => {
+    setTabFocusPath(path);
+    setActivePath(path);
+  };
+
+  const prefersReduced =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce').matches;
+
+  useEffect(() => {
+    if (!activePath) return;
+    const el = tabRefs.current.get(activePath);
+    if (!el) return;
+
+    requestAnimationFrame(() => {
+      el.scrollIntoView?.({
+        block: 'nearest',
+        inline: 'nearest',
+        behavior: prefersReduced ? 'auto' : 'smooth',
+      });
+    });
+  }, [activePath, prefersReduced]);
+
+  const focusNeighbor = (closed: string) => {
+    const i = openPaths.indexOf(closed);
+    const next = openPaths[i + 1] ?? openPaths[i - 1];
+    if (next) {
+      setTabFocusPath(next);
+      requestAnimationFrame(() => tabRefs.current.get(next)?.focus());
+    } else {
+      setTabFocusPath(null);
+    }
+  };
 
   if (openPaths.length === 0) return null;
 
@@ -120,15 +176,20 @@ const Tabs = () => {
         }
       }}
       onKeyDown={(e) => {
-        const tabs = tabRefs.current;
-        if (!tabs.length) return;
+        if (!openPaths.length) return;
         const current = document.activeElement as HTMLElement | null;
         let idx = Math.max(
           0,
-          tabs.findIndex((el) => el === current),
+          openPaths.findIndex((p) => tabRefs.current.get(p) === current),
         );
-        const last = tabs.length - 1;
-        const focusAt = (i: number) => tabs[i]?.focus();
+        const last = openPaths.length - 1;
+        const focusAt = (i: number) =>
+          (() => {
+            const p = openPaths[i];
+            if (!p) return;
+            setTabFocusPath(p);
+            tabRefs.current.get(p)?.focus();
+          })();
         switch (e.key) {
           case 'ArrowRight':
           case 'ArrowDown':
@@ -151,15 +212,21 @@ const Tabs = () => {
         }
       }}
     >
-      {openPaths.map((path, i) => (
+      {openPaths.map((path) => (
         <Tab
           path={path}
           key={path}
           active={activePath === path}
-          onSelect={setActivePath}
-          onClose={closeFile}
+          tabFocusPath={tabFocusPath}
+          onSelect={handleSelect}
+          onClose={(p) => {
+            focusNeighbor(p);
+            closeFile(p);
+          }}
+          setTabFocusPath={setTabFocusPath}
           ref={(el) => {
-            if (el) tabRefs.current[i] = el;
+            if (el) tabRefs.current.set(path, el);
+            else tabRefs.current.delete(path);
           }}
         />
       ))}

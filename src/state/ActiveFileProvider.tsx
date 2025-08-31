@@ -18,19 +18,53 @@ type FileActions = {
   ensureExpandedUpTo: (path: string) => void;
 };
 
+// for seeding tests
+type InitialSeed = Partial<{
+  activePath: string | null;
+  openPaths: string[];
+  expandedPaths: Iterable<string>;
+  treeFocusPath: string | null;
+}>;
+
 const FileStateContext = createContext<FileState | null>(null);
 const FileActionsContext = createContext<FileActions | null>(null);
 
 const initialActive = 'app/README.md';
 const initialOpen = [initialActive];
-const initialExpanded = new Set<string>(ancestorsOf(initialActive));
 
-const ActiveFileProvider = ({ children }: { children: React.ReactNode }) => {
-  const [activePath, setActivePath] = useState<string | null>(initialActive);
-  const [openPaths, setOpenPaths] = useState<string[]>(initialOpen);
-  const [expandedPaths, setExpandedPaths] =
-    useState<Set<string>>(initialExpanded);
-  const [treeFocusPath, setTreeFocusPath] = useState<string | null>(null);
+const ActiveFileProvider = ({
+  children,
+  initial,
+}: {
+  children: React.ReactNode;
+  initial?: InitialSeed;
+}) => {
+  const [activePath, setActivePath] = useState<string | null>(() =>
+    initial?.activePath ? normalizePath(initial.activePath) : initialActive,
+  );
+
+  const [openPaths, setOpenPaths] = useState<string[]>(() => {
+    const base = initial?.openPaths?.map(normalizePath) ?? initialOpen;
+    return activePath && !base.includes(activePath)
+      ? [...base, activePath]
+      : base;
+  });
+
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => {
+    if (initial?.expandedPaths) {
+      return new Set(Array.from(initial.expandedPaths, normalizePath));
+    }
+    const seeds = new Set<string>();
+    if (activePath) ancestorsOf(activePath).forEach((path) => seeds.add(path));
+    openPaths.forEach((path) =>
+      ancestorsOf(path).forEach((anc) => seeds.add(anc)),
+    );
+    return new Set(seeds);
+  });
+
+  const [treeFocusPath, setTreeFocusPath] = useState<string | null>(() =>
+    initial?.treeFocusPath ? normalizePath(initial.treeFocusPath) : null,
+  );
 
   const ensureExpandedUpTo = (path: string) => {
     const dirs = ancestorsOf(path).slice(0, -1);
@@ -98,8 +132,18 @@ const ActiveFileProvider = ({ children }: { children: React.ReactNode }) => {
     [],
   );
 
+  const state = useMemo<FileState>(
+    () => ({
+      activePath,
+      openPaths,
+      expandedPaths,
+      treeFocusPath,
+    }),
+    [activePath, openPaths, expandedPaths, treeFocusPath],
+  );
+
   return (
-    <FileStateContext.Provider value={fileState}>
+    <FileStateContext.Provider value={state}>
       <FileActionsContext.Provider value={fileActions}>
         {children}
       </FileActionsContext.Provider>
