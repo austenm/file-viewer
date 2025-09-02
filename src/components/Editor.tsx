@@ -1,13 +1,25 @@
 import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { getContent } from '../lib/contentStore';
-import { pathToUri, langFromExt } from '../lib/monaco/model-utils';
+import {
+  getOrCreateModel,
+  langFromExt,
+  releaseModel,
+} from '../lib/monaco/model-utils';
 import { tabIdFromPath } from '../utils/ids';
 import { perf } from '../utils/perf';
+import { useResizeObserver } from '../hooks/useResizeObserver';
 
-const Editor = ({ activePath }: { activePath: string }) => {
+const Editor = ({
+  activePath,
+  onChange,
+}: {
+  activePath: string;
+  onChange?: (value: string) => void;
+}) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const modelPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -18,7 +30,7 @@ const Editor = ({ activePath }: { activePath: string }) => {
       perf.mark('editor:create:start');
       editorRef.current = monaco.editor.create(container, {
         readOnly: true,
-        automaticLayout: true,
+        automaticLayout: false,
         minimap: { enabled: true },
         fontSize: 13,
         theme: 'vs-dark',
@@ -36,32 +48,40 @@ const Editor = ({ activePath }: { activePath: string }) => {
       perf.mark('editor:create:end');
       perf.measure('editor:create', 'editor:create:start', 'editor:create:end');
     }
+  }, []);
 
+  useResizeObserver(containerRef.current, () => {
+    editorRef.current?.layout();
+  });
+
+  useEffect(() => {
     // set up language model when filepath/content changes
-    const uri = pathToUri(activePath);
-    const model = monaco.editor.createModel(
-      getContent(activePath),
-      langFromExt(activePath),
-      uri,
-    );
-    perf.mark('editor:model:set:start');
-    editorRef.current.setModel(model);
+    const editor = editorRef.current;
+    if (!editor) return;
+    const model = getOrCreateModel(activePath, getContent);
 
+    perf.mark('editor:model:set:start');
+    editor.setModel(model);
     perf.mark('editor:model:set:end');
     perf.measure(
       'editor:model:set',
       'editor:model:set:start',
       'editor:model:set:end',
     );
+    modelPathRef.current = activePath;
+    const sub = model.onDidChangeContent(() => {
+      const value = model.getValue();
+      onChange?.(value);
+    });
 
     return () => {
-      model.dispose();
-      if (!container.isConnected && editorRef.current) {
-        editorRef.current?.dispose();
-        editorRef.current = null;
+      sub.dispose();
+      if (modelPathRef.current) {
+        releaseModel(modelPathRef.current);
+        modelPathRef.current = null;
       }
     };
-  }, [activePath]);
+  }, [activePath, onChange]);
 
   return (
     <div
