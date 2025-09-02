@@ -4,6 +4,7 @@ import Breadcrumbs from './components/Breadcrumbs';
 import reactTutorialFiles from './data/reactTutorialFiles';
 import buildTree from './lib/buildTree';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   const { activePath, openPaths } = useFileState();
@@ -29,11 +30,13 @@ function App() {
         {activePath === null && openPaths.length === 0 ? (
           <EmptyEditor />
         ) : (
-          <div className="flex flex-col h-full w-full min-h-0">
-            <Tabs />
-            <Breadcrumbs path={activePath!} />
-            <Editor activePath={activePath!} />
-          </div>
+          <ErrorBoundary resetKey={activePath}>
+            <div className="flex flex-col h-full w-full min-h-0">
+              <Tabs />
+              <Breadcrumbs path={activePath!} />
+              <Editor activePath={activePath!} />
+            </div>
+          </ErrorBoundary>
         )}
       </Panel>
     </PanelGroup>

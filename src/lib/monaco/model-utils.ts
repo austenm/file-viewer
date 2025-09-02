@@ -18,20 +18,69 @@ export const langFromExt = (path: string) => {
       return 'css';
     case 'html':
       return 'html';
+    default:
+      return 'plaintext';
   }
 };
 
+const encodePath = (path: string) => {
+  normalizePath(path).split('/').map(encodeURIComponent).join('/');
+};
+
 export const pathToUri = (path: string) =>
-  monaco.Uri.parse(`inmem:/${encodeURI(normalizePath(path))}`);
+  monaco.Uri.parse(`inmem:/${encodePath(path)}`);
 
 export const getOrCreateModel = (
   path: string,
   getContent: (p: string) => string,
 ) => {
+  return acquireModel(path, () => getContent(path));
+};
+
+const registry = new Map<
+  string,
+  { model: monaco.editor.ITextModel; ref: number }
+>();
+
+export const acquireModel = (
+  path: string,
+  initialValue: string | (() => string),
+): monaco.editor.ITextModel => {
   const uri = pathToUri(path);
-  let model = monaco.editor.getModel(uri);
-  if (!model) {
-    model = monaco.editor.createModel(getContent(path), langFromExt(path), uri);
+  const key = uri.toString();
+  let entry = registry.get(key);
+  if (!entry) {
+    const lang = langFromExt(path);
+    const text =
+      typeof initialValue === 'function'
+        ? initialValue()
+        : (initialValue ?? '');
+    const model =
+      monaco.editor.getModel(uri) ?? monaco.editor.createModel(text, lang, uri);
+    entry = { model, ref: 0 };
+    registry.set(key, entry);
+
+    model.onWillDispose(() => {
+      if (
+        process.env.NODE_DEV !== 'production' &&
+        (registry.get(key)?.ref ?? 0) > 0
+      ) {
+        console.warn('[monaco] model disposed with positive refcount', key);
+      }
+      registry.delete(key);
+    });
   }
-  return model;
+  entry.ref += 1;
+  return entry.model;
+};
+
+export const releaseModel = (path: string): void => {
+  const key = pathToUri(path).toString();
+  const entry = registry.get(key);
+  if (!entry) return;
+  entry.ref -= 1;
+  if (entry.ref <= 0) {
+    entry.model.dispose();
+    registry.delete(key);
+  }
 };
