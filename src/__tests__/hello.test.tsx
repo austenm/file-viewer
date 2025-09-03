@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
 
 function HelloButton() {
-  return <button onClick={() => alert('clicked')}>Hello</button>;
+  return <button onClick={() => console.log('clicked')}>Hello</button>;
 }
 
 describe('hello test', () => {
