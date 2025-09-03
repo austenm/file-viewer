@@ -18,6 +18,7 @@ type TabProps = {
   path: string;
   active: boolean;
   tabFocusPath: string | null;
+  isDirty: boolean;
   onSelect: (path: string) => void;
   onClose: (path: string) => void;
   setTabFocusPath: (path: string) => void;
@@ -29,6 +30,7 @@ const Tab = memo(
       path,
       active,
       tabFocusPath,
+      isDirty,
       onSelect,
       onClose,
       setTabFocusPath,
@@ -63,7 +65,7 @@ const Tab = memo(
           aria-controls="editor-panel"
           aria-label={path}
           aria-current={active ? 'page' : undefined}
-          title={path}
+          title={isDirty ? 'Unsaved changes' : undefined}
           tabIndex={tabFocusPath === path ? 0 : -1}
           onFocus={() => setTabFocusPath(path)}
           onClick={handleSelect}
@@ -96,26 +98,43 @@ const Tab = memo(
             {fileName(path)}
           </span>
         </button>
-        <button
-          type="button"
+        <span className="flex pointer-events-none">
+          {isDirty ? (
+            <>
+              <span
+                aria-hidden
+                className="bg-amber-400 rounded-full h-2 w-2 m-1 inline-block"
+                title="Unsaved changes"
+              />
+              <span className="sr-only">- unsaved changes</span>
+            </>
+          ) : (
+            <span aria-hidden className="m-1 inline-block h-2 w-2" />
+          )}
+        </span>
+        <span
+          role="presentation"
           tabIndex={-1}
           aria-label={`Close ${fileName(path)}`}
           className={cn(
-            '-mr-0.5 p-1 rounded-md hover:bg-neutral-700 hover:text-neutral-300 hover:cursor-pointer',
-            active ? 'text-neutral-900' : 'text-neutral-800',
-            'group-hover:text-neutral-400',
+            'p-1.5 rounded-md hover:bg-neutral-700 hover:cursor-pointer',
+            active
+              ? 'text-neutral-300'
+              : 'text-neutral-800 hover:text-neutral-300 group-hover:text-neutral-400',
+            '[@media(hover:none)]:text-neutral-400',
           )}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={handleClose}
         >
-          <CloseIcon size={14} />
-        </button>
+          <CloseIcon size={14} aria-hidden="true" focusable="false" />
+        </span>
       </div>
     );
   }),
 );
 
 const Tabs = () => {
-  const { openPaths, activePath } = useFileState();
+  const { openPaths, activePath, dirtyByPath } = useFileState();
   const { setActivePath, closeFile } = useFileActions();
   const [isHovering, setIsHovering] = useState(false);
   const tabRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -218,6 +237,7 @@ const Tabs = () => {
           key={path}
           active={activePath === path}
           tabFocusPath={tabFocusPath}
+          isDirty={!!dirtyByPath.get(path) === true}
           onSelect={handleSelect}
           onClose={(p) => {
             focusNeighbor(p);
