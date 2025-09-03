@@ -61,10 +61,12 @@ export const acquireModel = (
     registry.set(key, entry);
 
     model.onWillDispose(() => {
-      if (
-        process.env.NODE_DEV !== 'production' &&
-        (registry.get(key)?.ref ?? 0) > 0
-      ) {
+      const isDev =
+        (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) ||
+        (typeof process !== 'undefined' &&
+          process.env?.NODE_ENV !== 'production');
+      if (isDev && (registry.get(key)?.ref ?? 0) > 0) {
+        // eslint-disable-next-line no-console
         console.warn('[monaco] model disposed with positive refcount', key);
       }
       registry.delete(key);
