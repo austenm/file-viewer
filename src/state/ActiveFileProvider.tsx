@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import * as monaco from 'monaco-editor';
+import { getContent, setContent } from '../lib/contentStore';
+import { pathToUri } from '../lib/monaco/model-utils';
 import normalizePath from '../utils/normalizePath';
 import ancestorsOf from '../utils/ancestorsOf';
 
@@ -7,6 +10,7 @@ type FileState = {
   openPaths: string[];
   expandedPaths: Set<string>;
   treeFocusPath: string | null;
+  dirtyByPath: Map<string, boolean>;
 };
 
 type FileActions = {
@@ -16,6 +20,8 @@ type FileActions = {
   toggleExpanded: (path: string) => void;
   setTreeFocusPath: (path: string | null) => void;
   ensureExpandedUpTo: (path: string) => void;
+  setIsDirty: (path: string, isDirty?: boolean) => void;
+  saveFile: (path: string) => void;
 };
 
 // for seeding tests
@@ -75,9 +81,13 @@ const ActiveFileProvider = ({
     });
   };
 
+  const [dirtyByPath, setDirtyByPath] = useState<Map<string, boolean>>(
+    new Map(),
+  );
+
   const fileState = useMemo<FileState>(() => {
-    return { activePath, openPaths, expandedPaths, treeFocusPath };
-  }, [activePath, openPaths, expandedPaths, treeFocusPath]);
+    return { activePath, openPaths, expandedPaths, treeFocusPath, dirtyByPath };
+  }, [activePath, openPaths, expandedPaths, treeFocusPath, dirtyByPath]);
 
   const fileActions = useMemo<FileActions>(
     () => ({
@@ -128,22 +138,35 @@ const ActiveFileProvider = ({
       },
 
       ensureExpandedUpTo,
+
+      setIsDirty: (path: string, isDirty?: boolean) => {
+        const pNorm = normalizePath(path);
+        setDirtyByPath((prev) => {
+          const next = new Map(prev);
+          const current = next.get(pNorm) ?? false;
+          next.set(pNorm, isDirty ?? !current);
+          return next;
+        });
+      },
+
+      saveFile: (path: string) => {
+        const pNorm = normalizePath(path);
+        const uri = pathToUri(pNorm);
+        const model = monaco.editor.getModel(uri);
+        const text = model?.getValue() ?? getContent(pNorm);
+        setContent(pNorm, text);
+        setDirtyByPath((prev) => {
+          const next = new Map(prev);
+          next.set(pNorm, false);
+          return next;
+        });
+      },
     }),
     [],
   );
 
-  const state = useMemo<FileState>(
-    () => ({
-      activePath,
-      openPaths,
-      expandedPaths,
-      treeFocusPath,
-    }),
-    [activePath, openPaths, expandedPaths, treeFocusPath],
-  );
-
   return (
-    <FileStateContext.Provider value={state}>
+    <FileStateContext.Provider value={fileState}>
       <FileActionsContext.Provider value={fileActions}>
         {children}
       </FileActionsContext.Provider>
