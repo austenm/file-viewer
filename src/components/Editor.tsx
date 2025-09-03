@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react';
 import * as monaco from 'monaco-editor';
 import { getContent } from '../lib/contentStore';
-import {
-  getOrCreateModel,
-  langFromExt,
-  releaseModel,
-} from '../lib/monaco/model-utils';
+import { getOrCreateModel, releaseModel } from '../lib/monaco/model-utils';
 import { tabIdFromPath } from '../utils/ids';
 import { perf } from '../utils/perf';
 import { useResizeObserver } from '../hooks/useResizeObserver';
+import { useFileActions } from '../state/ActiveFileProvider';
 
 const Editor = ({
   activePath,
@@ -17,9 +14,11 @@ const Editor = ({
   activePath: string;
   onChange?: (value: string) => void;
 }) => {
+  const { setIsDirty } = useFileActions();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const modelPathRef = useRef<string | null>(null);
+  const applyingExternalRef = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -29,7 +28,7 @@ const Editor = ({
     if (!editorRef.current) {
       perf.mark('editor:create:start');
       editorRef.current = monaco.editor.create(container, {
-        readOnly: true,
+        readOnly: false,
         automaticLayout: false,
         minimap: { enabled: true },
         fontSize: 13,
@@ -70,7 +69,9 @@ const Editor = ({
     );
     modelPathRef.current = activePath;
     const sub = model.onDidChangeContent(() => {
+      if (applyingExternalRef.current) return;
       const value = model.getValue();
+      setIsDirty(activePath, value !== getContent(activePath));
       onChange?.(value);
     });
 
