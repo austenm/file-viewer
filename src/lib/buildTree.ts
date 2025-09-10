@@ -5,7 +5,11 @@ const buildTree = (files: { path: string }[]): FileNode => {
 
   // build file tree from flat file paths
   for (const file of files) {
-    const pathArray = file.path.split('/').filter(Boolean);
+    const isExplicitDir = file.path.endsWith('/');
+    const normalizedPath = isExplicitDir
+      ? file.path.replace(/\/+$/, '')
+      : file.path;
+    const pathArray = normalizedPath.split('/').filter(Boolean);
     let currentNode = root;
 
     pathArray.forEach((segment, idx) => {
@@ -23,7 +27,9 @@ const buildTree = (files: { path: string }[]): FileNode => {
       currentNode = nextNodeInPath;
     });
 
-    if (currentNode.children && currentNode.children.length === 0) {
+    if (isExplicitDir) {
+      if (!currentNode.children) currentNode.children = [];
+    } else if (currentNode.children && currentNode.children.length === 0) {
       delete currentNode.children;
     }
   }

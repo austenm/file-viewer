@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFileState, useFileActions } from '../state/ActiveFileProvider';
+import useFilesList from '../hooks/useFilesList';
+import buildTree from '../lib/buildTree';
 import type { FileNode } from '../utils/types';
 import FileTreeNode from './FileTreeNode';
+import reactTutorialFiles from '../data/reactTutorialFiles';
 
 type FlatNode = {
   path: string;
@@ -30,14 +33,14 @@ const visibleNodes = (root: FileNode, expandedPaths: Set<string>) => {
   return out;
 };
 
-const FileTree = ({
-  projectName,
-  rootNode,
-}: {
-  projectName: string;
-  rootNode: FileNode;
-}) => {
-  const { openFile, setTreeFocusPath, toggleExpanded } = useFileActions();
+const FileTree = () => {
+  const paths = useFilesList();
+  const rootNode = useMemo(
+    () => buildTree(paths.map((p) => ({ path: p }))),
+    [paths],
+  );
+
+  const {
   const { expandedPaths, treeFocusPath } = useFileState();
   const rowRefs = useRef(new Map<string, HTMLDivElement>());
 
@@ -90,7 +93,8 @@ const FileTree = ({
   return (
     <div className="h-full border border-r bg-neutral-800">
       <div className="mb-1 font-bold text-[0.82rem] text-neutral-300">
-        {projectName.toUpperCase()}
+        <span className="mt-1 font-bold text-[0.82rem] text-neutral-300">
+          {reactTutorialFiles.name.toUpperCase()}
       </div>
       <div
         role="tree"
