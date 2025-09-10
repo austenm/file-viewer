@@ -210,6 +210,28 @@ const ActiveFileProvider = ({
     },
     [ensureExpandedUpTo],
   );
+  useEffect(() => {
+    dirtyRef.current = dirtyByPath;
+  }, [dirtyByPath]);
+
+  useEffect(() => {
+    const p = pendingCreateRef.current;
+    if (!p) return;
+    pendingCreateRef.current = null;
+
+    setContent(p, '');
+    openFileImpl(p);
+  }, [openFileImpl]);
+
+  useEffect(() => {
+    const newPathRef = pendingRenameRef.current;
+    const oldPathRef = oldNameRef.current;
+    if (!newPathRef || !oldPathRef) return;
+    pendingRenameRef.current = null;
+    oldNameRef.current = null;
+    confirmRenameImpl(oldPathRef, newPathRef);
+  }, [confirmRenameImpl]);
+
 
   const dirtyAny = useMemo(() => {
     for (const v of dirtyByPath.values()) if (v) return true;
