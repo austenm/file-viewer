@@ -51,6 +51,7 @@ const FileTree = () => {
     deletePathAt,
     beginNewFolderAt,
   } = useFileActions();
+
   const { expandedPaths, treeFocusPath } = useFileState();
   const rowRefs = useRef(new Map<string, HTMLDivElement>());
 
