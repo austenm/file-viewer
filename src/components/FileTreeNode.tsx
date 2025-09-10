@@ -10,6 +10,147 @@ type FileTreeNodeProps = {
   depth?: number;
   expandedPaths: Set<string>;
   registerForPath: (path: string) => (el: HTMLDivElement | null) => void;
+const CreateFileNode = ({
+  onBlur,
+  depth = 0,
+}: {
+  onBlur: () => void;
+  depth?: number;
+}) => {
+  const { newDraft } = useFileState();
+  const { setNewFileName, cancelNewFile, confirmNewFile } = useFileActions();
+  const [fileName, setFileName] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current == null) return;
+    inputRef.current.focus();
+  }, []);
+
+  useEffect(() => {
+    setNewFileName(fileName);
+  }, [fileName]);
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className="flex items-center gap-0.5"
+        style={{ paddingLeft: `${depth / 1.5}rem` }}
+      >
+        <div className="min-w-4">
+          <FileIcon
+            fileName={fileName.includes('.') ? fileName : `${fileName}.txt`}
+          />
+        </div>
+        <input
+          onChange={(e) => setFileName(e.target.value)}
+          onBlur={onBlur}
+          ref={inputRef}
+          onKeyDown={(e) => {
+            switch (e.key) {
+              case 'ArrowDown':
+              case 'ArrowUp':
+              case 'Home':
+              case 'End':
+                e.preventDefault();
+                break;
+              case 'Escape':
+                e.preventDefault();
+                cancelNewFile();
+                break;
+              case 'Enter':
+                e.preventDefault();
+                confirmNewFile();
+                break;
+            }
+          }}
+          className="bg-neutral-700 outline outline-blue-300 mt-1 py-0.5 text-neutral-200 text-xs indent-1"
+        />
+      </div>
+      {newDraft!.error && (
+        <div
+          id="newfile-error"
+          className="mt-1 text-xs text-red-400"
+          style={{ paddingLeft: `${depth}rem` }}
+        >
+          {newDraft!.error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+};
+const CreateFileNode = ({
+  onBlur,
+  depth = 0,
+}: {
+  onBlur: () => void;
+  depth?: number;
+}) => {
+  const { newDraft } = useFileState();
+  const { setNewFileName, cancelNewFile, confirmNewFile } = useFileActions();
+  const [fileName, setFileName] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current == null) return;
+    inputRef.current.focus();
+  }, []);
+
+  useEffect(() => {
+    setNewFileName(fileName);
+  }, [fileName]);
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className="flex items-center gap-0.5"
+        style={{ paddingLeft: `${depth / 1.5}rem` }}
+      >
+        <div className="min-w-4">
+          <FileIcon
+            fileName={fileName.includes('.') ? fileName : `${fileName}.txt`}
+          />
+        </div>
+        <input
+          onChange={(e) => setFileName(e.target.value)}
+          onBlur={onBlur}
+          ref={inputRef}
+          onKeyDown={(e) => {
+            switch (e.key) {
+              case 'ArrowDown':
+              case 'ArrowUp':
+              case 'Home':
+              case 'End':
+                e.preventDefault();
+                break;
+              case 'Escape':
+                e.preventDefault();
+                cancelNewFile();
+                break;
+              case 'Enter':
+                e.preventDefault();
+                confirmNewFile();
+                break;
+            }
+          }}
+          className="bg-neutral-700 outline outline-blue-300 mt-1 py-0.5 text-neutral-200 text-xs indent-1"
+        />
+      </div>
+      {newDraft!.error && (
+        <div
+          id="newfile-error"
+          className="mt-1 text-xs text-red-400"
+          style={{ paddingLeft: `${depth}rem` }}
+        >
+          {newDraft!.error}
+        </div>
+      )}
+    </div>
+  );
+};
+
 };
 const CreateFileNode = ({
   onBlur,
