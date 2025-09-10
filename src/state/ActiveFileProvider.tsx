@@ -23,6 +23,7 @@ import { validateFileName } from '../lib/validateFileName';
 import { buildPathName } from '../lib/buildPathName';
 import { validateFolderName } from '../lib/validateFolderName';
 
+
 type FileState = {
   activePath: string | null;
   openPaths: string[];
@@ -30,6 +31,7 @@ type FileState = {
   treeFocusPath: string | null;
   dirtyByPath: Map<string, boolean>;
   newDraft: { dir: string; name: string; error: string | null } | null;
+
   renameDraft: { path: string; name: string; error: string | null } | null;
 };
 

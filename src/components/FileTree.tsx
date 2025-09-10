@@ -46,6 +46,7 @@ const FileTree = () => {
     toggleExpanded,
     beginNewFileAt,
   } = useFileActions();
+
   const { expandedPaths, treeFocusPath } = useFileState();
   const rowRefs = useRef(new Map<string, HTMLDivElement>());
 
