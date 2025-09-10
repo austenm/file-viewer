@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import * as monaco from 'monaco-editor';
 import {
+  addFolder,
   deleteTree,
   folders,
   getContent,
@@ -33,6 +34,7 @@ type FileState = {
   dirtyByPath: Map<string, boolean>;
   newDraft: { dir: string; name: string; error: string | null } | null;
   renameDraft: { path: string; name: string; error: string | null } | null;
+  newFolderDraft: { dir: string; name: string; error: string | null } | null;
 };
 
 type FileActions = {
@@ -53,6 +55,10 @@ type FileActions = {
   setRenameName: (name: string) => void;
   cancelRename: () => void;
   confirmRename: () => void;
+  beginNewFolderAt: (dir: string) => void;
+  setNewFolderName: (name: string) => void;
+  cancelNewFolder: () => void;
+  confirmNewFolder: () => void;
 };
 
 // for seeding tests
@@ -119,11 +125,17 @@ const ActiveFileProvider = ({
     error: string | null;
   } | null>(null);
 
+  const [newFolderDraft, setNewFolderDraft] = useState<{
+    dir: string;
+    name: string;
+    error: string | null;
+  } | null>(null);
 
   const dirtyRef = useRef(dirtyByPath);
   const pendingCreateRef = useRef<string | null>(null);
   const pendingRenameRef = useRef<string | null>(null);
   const oldNameRef = useRef<string | null>(null);
+  const pendingCreateFolderRef = useRef<string | null>(null);
 
   const ensureExpandedUpTo = (path: string) => {
     const dirs = ancestorsOf(path).slice(0, -1);
@@ -189,6 +201,36 @@ const ActiveFileProvider = ({
     },
     [ensureExpandedUpTo],
   );
+
+  const confirmNewFolderImpl = useCallback(
+    (dir: string) => {
+      addFolder(dir);
+      ensureExpandedUpTo(dir);
+      setTreeFocusPath(dir);
+    },
+    [ensureExpandedUpTo],
+  );
+
+  const dirtyAny = useMemo(() => {
+    for (const v of dirtyByPath.values()) if (v) return true;
+    return false;
+  }, [dirtyByPath]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!dirtyAny) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [dirtyAny]);
+
   useEffect(() => {
     dirtyRef.current = dirtyByPath;
   }, [dirtyByPath]);
@@ -211,6 +253,12 @@ const ActiveFileProvider = ({
     confirmRenameImpl(oldPathRef, newPathRef);
   }, [confirmRenameImpl]);
 
+  useEffect(() => {
+    const newFolderRef = pendingCreateFolderRef.current;
+    if (!newFolderRef) return;
+    pendingCreateFolderRef.current = null;
+    confirmNewFolderImpl(newFolderRef);
+  }, [confirmNewFolderImpl]);
 
   const fileState = useMemo<FileState>(() => {
     return {
@@ -221,6 +269,7 @@ const ActiveFileProvider = ({
       dirtyByPath,
       newDraft,
       renameDraft,
+      newFolderDraft,
     };
   }, [
     activePath,
@@ -230,6 +279,7 @@ const ActiveFileProvider = ({
     dirtyByPath,
     newDraft,
     renameDraft,
+    newFolderDraft,
   ]);
 
   const fileActions = useMemo<FileActions>(
@@ -424,6 +474,37 @@ const ActiveFileProvider = ({
           oldNameRef.current = oldPath;
           pendingRenameRef.current = newPath;
 
+          return null;
+        });
+      },
+
+      beginNewFolderAt: (dir: string) => {
+        ensureExpandedUpTo(dir);
+        setNewFolderDraft({ dir: normalizePath(dir), name: '', error: null });
+        setTreeFocusPath(dir);
+      },
+
+      setNewFolderName: (name: string) => {
+        setNewFolderDraft((prev) =>
+          prev ? { ...prev, name, error: validateFolderName(name) } : prev,
+        );
+      },
+
+      cancelNewFolder: () => {
+        setNewFolderDraft(null);
+      },
+
+      confirmNewFolder: () => {
+        setNewFolderDraft((prev) => {
+          if (!prev) return prev;
+          const full = normalizePath(`${prev.dir}/${prev.name.trim()}/`);
+          const err =
+            validateFolderName(prev.name.trim()) ||
+            (folders.has(full) || hasPath(full.slice(0, -1))
+              ? 'Name already exists'
+              : null);
+          if (err) return { ...prev, error: err };
+          pendingCreateFolderRef.current = full;
           return null;
         });
       },
