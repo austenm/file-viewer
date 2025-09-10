@@ -3,12 +3,14 @@ import type { FileNode } from '../utils/types';
 import FileIcon from './FileIcon';
 import ChevronIcon from './ChevronIcon';
 import { cn } from '../utils/cn';
+import { useEffect, useRef, useState } from 'react';
 
 type FileTreeNodeProps = {
   file: FileNode;
   depth?: number;
   expandedPaths: Set<string>;
   registerForPath: (path: string) => (el: HTMLDivElement | null) => void;
+};
 const CreateFileNode = ({
   onBlur,
   depth = 0,
@@ -94,6 +96,9 @@ const FileTreeNode = ({
     setTreeFocusPath,
     toggleExpanded,
     cancelNewFile,
+    setRenameName,
+    confirmRename,
+    cancelRename,
   } = useFileActions();
   const [showCreateFileNode, setShowCreateFileNode] = useState(true);
 
@@ -148,10 +153,40 @@ const FileTreeNode = ({
         ) : (
           <FileIcon fileName={file.path} />
         )}
-
-        <span className="text-[0.82rem] font-light text-neutral-300">
-          {file.name}
-        </span>
+        {renameDraft?.path === file.path ? (
+          <input
+            autoFocus
+            value={renameDraft.name}
+            onChange={(e) => setRenameName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                confirmRename();
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelRename();
+              } else if (
+                [
+                  'ArrowUp',
+                  'ArrowDown',
+                  'ArrowLeft',
+                  'ArrowRight',
+                  'Home',
+                  'End',
+                ].includes(e.key)
+              ) {
+                e.stopPropagation();
+              }
+            }}
+            onBlur={() => confirmRename()}
+            aria-invalid={!!renameDraft.error}
+            className="bg-neutral-700 outline outline-blue-300 py-0.5 text-neutral-300 text-xs indent-1"
+          />
+        ) : (
+          <span className="text-[0.82rem] font-light text-neutral-300">
+            {file.name}
+          </span>
+        )}
       </div>
 
       {newDraft !== null &&
