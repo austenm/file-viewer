@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFileState, useFileActions } from '../state/ActiveFileProvider';
 import useFilesList from '../hooks/useFilesList';
 import buildTree from '../lib/buildTree';
 import type { FileNode } from '../utils/types';
 import FileTreeNode from './FileTreeNode';
 import reactTutorialFiles from '../data/reactTutorialFiles';
+import ContextMenu from './ContextMenu';
+import normalizePath from '../utils/normalizePath';
 
 type FlatNode = {
   path: string;
@@ -45,6 +47,9 @@ const FileTree = () => {
     setTreeFocusPath,
     toggleExpanded,
     beginNewFileAt,
+    beginRenameAt,
+    deletePathAt,
+    beginNewFolderAt,
   } = useFileActions();
 
   const { expandedPaths, treeFocusPath } = useFileState();
@@ -94,6 +99,21 @@ const FileTree = () => {
     const el = rowRefs.current.get(path);
     requestAnimationFrame(() => el?.focus());
     el?.scrollIntoView?.({ block: 'nearest' });
+  };
+
+  type MenuState =
+    | { open: false }
+    | { open: true; x: number; y: number; path: string; kind: 'file' | 'dir' };
+
+  const [menu, setMenu] = useState<MenuState>({ open: false });
+
+  const openMenu = (e: React.MouseEvent, path: string, isDir: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTreeFocusPath(path);
+    const x = Math.min(e.clientX, window.innerWidth - 180);
+    const y = Math.min(e.clientY, window.innerHeight - 160);
+    setMenu({ open: true, x, y, path, kind: isDir ? 'dir' : 'file' });
   };
 
   return (
@@ -175,6 +195,23 @@ const FileTree = () => {
               if (node.isDir) toggleExpanded(node.path);
               else openFile(node.path);
               break;
+            case 'F10':
+              if (e.shiftKey) {
+                e.preventDefault();
+                const rect = (
+                  e.currentTarget as HTMLElement
+                ).getBoundingClientRect();
+                openMenu(
+                  {
+                    preventDefault: () => {},
+                    clientX: rect.right - 8,
+                    clientY: rect.top + 18,
+                  } as any,
+                  node.path,
+                  node.isDir,
+                );
+              }
+              break;
           }
         }}
       >
@@ -184,8 +221,34 @@ const FileTree = () => {
             file={child}
             expandedPaths={expandedPaths}
             registerForPath={registerRowRef}
+            onContextMenu={(e, path, isDir) => openMenu(e, path, isDir)}
           />
         ))}
+        {menu.open && (
+          <ContextMenu
+            state={menu}
+            onClose={() => setMenu({ open: false })}
+            onAction={(action) => {
+              const dir =
+                menu.kind === 'dir'
+                  ? menu.path
+                  : menu.path.slice(0, menu.path.lastIndexOf('/')) || '';
+              if (action === 'new-file') {
+                beginNewFileAt(dir);
+              } else if (action === 'new-folder') {
+                beginNewFolderAt(dir);
+              } else if (action === 'rename') {
+                beginRenameAt(menu.path);
+              } else if (action === 'delete') {
+                if (menu.kind === 'dir') {
+                  const ok = window.confirm('Delete folder and all contents?');
+                  if (!ok) return;
+                }
+                deletePathAt(menu.path);
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   );

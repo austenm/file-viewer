@@ -194,7 +194,6 @@ const ActiveFileProvider = ({
   }, [dirtyByPath]);
 
   useEffect(() => {
-
     const p = pendingCreateRef.current;
     if (!p) return;
     pendingCreateRef.current = null;
