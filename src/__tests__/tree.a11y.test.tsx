@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
 import ActiveFileProvider from '../state/ActiveFileProvider';
 import { FileTree } from '../components';
-import buildTree from '../lib/buildTree';
+
 import {
   focusFirstTabbable,
   expectOneTabbable,
@@ -21,12 +21,10 @@ describe('FileTreeNode a11y semantics', () => {
     ],
   };
 
-  const rootNode = buildTree(project.files);
-
   function TreeHarness() {
     return (
       <ActiveFileProvider>
-        <FileTree projectName={project.name} rootNode={rootNode} />
+        <FileTree />
       </ActiveFileProvider>
     );
   }
@@ -42,7 +40,7 @@ describe('FileTreeNode a11y semantics', () => {
     await nextFrame();
     expect(folderToToggle).toHaveAttribute('aria-expanded', 'true');
     const fileToOpen = screen.getByRole('treeitem', {
-      name: 'app/public/favicon.ico',
+      name: 'app/public/favicon.svg',
     });
 
     await u.click(fileToOpen);
