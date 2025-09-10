@@ -41,6 +41,12 @@ const FileTree = () => {
   );
 
   const {
+    openFile,
+    setTreeFocusPath,
+    toggleExpanded,
+    beginNewFileAt,
+  } = useFileActions();
+
   const { expandedPaths, treeFocusPath } = useFileState();
   const rowRefs = useRef(new Map<string, HTMLDivElement>());
 
@@ -92,9 +98,24 @@ const FileTree = () => {
 
   return (
     <div className="h-full border border-r bg-neutral-800">
-      <div className="mb-1 font-bold text-[0.82rem] text-neutral-300">
+
+      <div className="flex my-1 pl-1">
         <span className="mt-1 font-bold text-[0.82rem] text-neutral-300">
           {reactTutorialFiles.name.toUpperCase()}
+        </span>
+        <span className="grow" />
+        <span className="relative">
+          <button
+            className="peer rounded-md px-2 text-neutral-300 hover:bg-neutral-700 hover:cursor-pointer"
+            onClick={() => beginNewFileAt(treeFocusPath!)}
+            aria-label="add-file"
+          >
+            +
+          </button>
+          <span className="absolute -left-16 top-8 text-xs opacity-0 transition-opacity ease-in-out duration-200 peer-hover:opacity-100 bg-neutral-800 border border-neutral-400 text-neutral-300 px-2 py-1 rounded-md">
+            Add new file
+          </span>
+        </span>
       </div>
       <div
         role="tree"

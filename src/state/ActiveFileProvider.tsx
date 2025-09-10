@@ -1,9 +1,24 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import * as monaco from 'monaco-editor';
-import { getContent, setContent } from '../lib/contentStore';
+import {
+  getContent,
+  getPathsSnapshot,
+  hasPath,
+  setContent,
+} from '../lib/contentStore';
 import { pathToUri } from '../lib/monaco/model-utils';
 import normalizePath from '../utils/normalizePath';
 import ancestorsOf from '../utils/ancestorsOf';
+import { validateFileName } from '../lib/validateFileName';
+import { buildPathName } from '../lib/buildPathName';
 
 type FileState = {
   activePath: string | null;
@@ -11,6 +26,7 @@ type FileState = {
   expandedPaths: Set<string>;
   treeFocusPath: string | null;
   dirtyByPath: Map<string, boolean>;
+  newDraft: { dir: string; name: string; error: string | null } | null;
 };
 
 type FileActions = {
@@ -22,6 +38,10 @@ type FileActions = {
   ensureExpandedUpTo: (path: string) => void;
   setIsDirty: (path: string, isDirty?: boolean) => void;
   saveFile: (path: string) => void;
+  beginNewFileAt: (dir: string) => void;
+  setNewFileName: (name: string) => void;
+  cancelNewFile: () => void;
+  confirmNewFile: () => void;
 };
 
 // for seeding tests
@@ -72,6 +92,18 @@ const ActiveFileProvider = ({
     initial?.treeFocusPath ? normalizePath(initial.treeFocusPath) : null,
   );
 
+  const [dirtyByPath, setDirtyByPath] = useState<Map<string, boolean>>(
+    new Map(),
+  );
+
+  const [newDraft, setNewDraft] = useState<{
+    dir: string;
+    name: string;
+    error: string | null;
+  } | null>(null);
+  const dirtyRef = useRef(dirtyByPath);
+  const pendingCreateRef = useRef<string | null>(null);
+
   const ensureExpandedUpTo = (path: string) => {
     const dirs = ancestorsOf(path).slice(0, -1);
     setExpandedPaths((prev) => {
@@ -81,13 +113,38 @@ const ActiveFileProvider = ({
     });
   };
 
-  const [dirtyByPath, setDirtyByPath] = useState<Map<string, boolean>>(
-    new Map(),
+  const isUnder = (candidate: string, base: string) => {
+    const cNorm = normalizePath(candidate);
+    const bNorm = normalizePath(base);
+
+  const openFileImpl = useCallback(
+    (path: string) => {
+      const pNorm = normalizePath(path);
+      setOpenPaths((prev) => (prev.includes(pNorm) ? prev : [...prev, pNorm]));
+      setActivePath(pNorm);
+      ensureExpandedUpTo(pNorm);
+      setTreeFocusPath(pNorm);
+    },
+    [ensureExpandedUpTo],
   );
 
   const fileState = useMemo<FileState>(() => {
-    return { activePath, openPaths, expandedPaths, treeFocusPath, dirtyByPath };
-  }, [activePath, openPaths, expandedPaths, treeFocusPath, dirtyByPath]);
+    return {
+      activePath,
+      openPaths,
+      expandedPaths,
+      treeFocusPath,
+      dirtyByPath,
+      newDraft,
+    };
+  }, [
+    activePath,
+    openPaths,
+    expandedPaths,
+    treeFocusPath,
+    dirtyByPath,
+    newDraft,
+  ]);
 
   const fileActions = useMemo<FileActions>(
     () => ({
@@ -100,14 +157,7 @@ const ActiveFileProvider = ({
         }
       },
 
-      openFile: (path) => {
-        const pNorm = normalizePath(path);
-        setOpenPaths((prev) =>
-          prev.includes(pNorm) ? prev : [...prev, pNorm],
-        );
-        setActivePath(pNorm);
-        ensureExpandedUpTo(pNorm);
-      },
+      openFile: openFileImpl,
 
       closeFile: (path) => {
         const pNorm = normalizePath(path);
@@ -159,6 +209,45 @@ const ActiveFileProvider = ({
           const next = new Map(prev);
           next.set(pNorm, false);
           return next;
+        });
+      },
+
+      beginNewFileAt: (dir: string) => {
+        ensureExpandedUpTo(dir);
+        setNewDraft({ dir, name: '', error: null });
+        return;
+      },
+
+      setNewFileName: (name: string) => {
+        setNewDraft((prev) =>
+          prev
+            ? {
+                ...prev,
+                name: name,
+                error: validateFileName(name),
+              }
+            : prev,
+        );
+        return;
+      },
+
+      cancelNewFile: () => {
+        setNewDraft(null);
+        return;
+      },
+
+      confirmNewFile: () => {
+        setNewDraft((prev) => {
+          if (!prev) return prev;
+          const name = prev.name.trim();
+          const fullPath = buildPathName(prev.dir, name);
+          const err =
+            validateFileName(name) ||
+            (hasPath(fullPath) ? 'Name already exists' : null);
+          if (err) return { ...prev, error: err };
+
+          pendingCreateRef.current = fullPath;
+          return null;
         });
       },
     }),
