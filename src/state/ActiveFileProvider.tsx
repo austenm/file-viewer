@@ -9,6 +9,8 @@ import React, {
 } from 'react';
 import * as monaco from 'monaco-editor';
 import {
+  deleteTree,
+  folders,
   getContent,
   getPathsSnapshot,
   hasPath,
@@ -42,6 +44,7 @@ type FileActions = {
   ensureExpandedUpTo: (path: string) => void;
   setIsDirty: (path: string, isDirty?: boolean) => void;
   saveFile: (path: string) => void;
+  deletePathAt: (path: string) => void;
   beginNewFileAt: (dir: string) => void;
   setNewFileName: (name: string) => void;
   cancelNewFile: () => void;
@@ -144,6 +147,11 @@ const ActiveFileProvider = ({
     return false;
   };
 
+  const affectedPathsForDelete = (base: string) => {
+    const bNorm = normalizePath(base);
+    return getPathsSnapshot().filter((p) => isUnder(p, bNorm));
+  };
+
   const openFileImpl = useCallback(
     (path: string) => {
       const pNorm = normalizePath(path);
@@ -181,6 +189,10 @@ const ActiveFileProvider = ({
     },
     [ensureExpandedUpTo],
   );
+  useEffect(() => {
+    dirtyRef.current = dirtyByPath;
+  }, [dirtyByPath]);
+
   useEffect(() => {
     const p = pendingCreateRef.current;
     if (!p) return;
@@ -235,6 +247,10 @@ const ActiveFileProvider = ({
 
       closeFile: (path) => {
         const pNorm = normalizePath(path);
+        if (dirtyByPath.get(pNorm)) {
+          const ok = window.confirm('Close without saving?');
+          if (!ok) return;
+        }
         setOpenPaths((prev) => {
           const i = prev.indexOf(pNorm);
           if (i === -1) return prev;
@@ -284,6 +300,42 @@ const ActiveFileProvider = ({
           next.set(pNorm, false);
           return next;
         });
+      },
+
+      deletePathAt: (path: string) => {
+        const pNorm = normalizePath(path);
+        const affected = affectedPathsForDelete(pNorm);
+        if (!affected.length) return;
+
+        if (hasDirtyUnder(pNorm)) {
+          const noun = affected.length > 1 ? 'items' : 'file';
+          const ok = window.confirm(`Delete ${noun} without saving?`);
+          if (!ok) return;
+        }
+
+        setOpenPaths((prev) => {
+          const next = prev?.filter((p) => !isUnder(p, pNorm));
+
+          setActivePath((curr) => {
+            if (!curr || !isUnder(curr, pNorm)) return curr;
+            if (next.length === 0) return null;
+            const i = prev.indexOf(curr);
+            const fallback = prev[i + 1] ?? prev[i - 1] ?? next[0];
+            return next.includes(fallback) ? fallback : next[0];
+          });
+
+          return next;
+        });
+
+        setDirtyByPath((prev) => {
+          const next = new Map(prev);
+          for (const [p] of affected) {
+            if (p === pNorm || p.startsWith(pNorm + '/')) next.delete(p);
+          }
+          return next;
+        });
+
+        deleteTree(pNorm);
       },
 
       beginNewFileAt: (dir: string) => {
