@@ -4,13 +4,16 @@ import FileIcon from './FileIcon';
 import ChevronIcon from './ChevronIcon';
 import { cn } from '../utils/cn';
 import { useEffect, useRef, useState } from 'react';
+import { Folder } from 'lucide-react';
 
 type FileTreeNodeProps = {
   file: FileNode;
   depth?: number;
   expandedPaths: Set<string>;
   registerForPath: (path: string) => (el: HTMLDivElement | null) => void;
+  onContextMenu: (e: React.MouseEvent, path: string, isDir: boolean) => void;
 };
+
 const CreateFileNode = ({
   onBlur,
   depth = 0,
@@ -81,6 +84,73 @@ const CreateFileNode = ({
   );
 };
 
+const CreateFolderNode = ({
+  onBlur,
+  depth = 0,
+}: {
+  onBlur: () => void;
+  depth?: number;
+}) => {
+  const { newFolderDraft } = useFileState();
+  const { setNewFolderName, cancelNewFolder, confirmNewFolder } =
+    useFileActions();
+  const [folderName, setFolderName] = useState('');
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (inputRef.current == null) return;
+    inputRef.current.focus();
+  }, []);
+
+  useEffect(() => {
+    setNewFolderName(folderName);
+  }, [folderName]);
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className="flex items-center gap-0.5"
+        style={{ paddingLeft: `${depth / 1.5}rem` }}
+      >
+        <div className="min-w-4 mt-1">
+          <Folder color="#d4d4d4" size={12} />
+        </div>
+        <input
+          onChange={(e) => setFolderName(e.target.value)}
+          onBlur={onBlur}
+          ref={inputRef}
+          onKeyDown={(e) => {
+            switch (e.key) {
+              case 'ArrowDown':
+              case 'ArrowUp':
+              case 'Home':
+              case 'End':
+                e.preventDefault();
+                break;
+              case 'Escape':
+                e.preventDefault();
+                cancelNewFolder();
+                break;
+              case 'Enter':
+                e.preventDefault();
+                confirmNewFolder();
+                break;
+            }
+          }}
+          className="bg-neutral-700 outline outline-blue-300 mt-1 py-0.5 text-neutral-200 text-xs indent-1"
+        />
+      </div>
+      {newFolderDraft!.error && (
+        <div
+          id="newfile-error"
+          className="mt-1 text-xs text-red-400"
+          style={{ paddingLeft: `${depth}rem` }}
+        >
+          {newFolderDraft!.error}
+        </div>
+      )}
+    </div>
+  );
 };
 
 const FileTreeNode = ({
@@ -88,6 +158,7 @@ const FileTreeNode = ({
   depth = 0,
   expandedPaths,
   registerForPath,
+  onContextMenu,
 }: FileTreeNodeProps) => {
   const { activePath, treeFocusPath, newDraft, renameDraft, newFolderDraft } =
     useFileState();
@@ -99,8 +170,10 @@ const FileTreeNode = ({
     setRenameName,
     confirmRename,
     cancelRename,
+    cancelNewFolder,
   } = useFileActions();
   const [showCreateFileNode, setShowCreateFileNode] = useState(true);
+  const [showCreateFolderNode, setShowCreateFolderNode] = useState(true);
 
   const handleOnBlur = () => {
     setShowCreateFileNode(false);
@@ -113,6 +186,16 @@ const FileTreeNode = ({
     };
   };
 
+  const handleFolderOnBlur = () => {
+    setShowCreateFolderNode(false);
+    cancelNewFolder();
+    const folderTimer = setTimeout(() => {
+      setShowCreateFolderNode(true);
+    }, 100);
+    return () => {
+      clearTimeout(folderTimer);
+    };
+  };
 
   const isFolder = Array.isArray(file.children);
   const isActive = activePath === file.path;
@@ -129,6 +212,11 @@ const FileTreeNode = ({
         aria-level={depth + 1}
         aria-current={isActive ? 'page' : undefined}
         aria-label={file.path}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onContextMenu?.(e, file.path, isFolder);
+        }}
         onClick={() => {
           setTreeFocusPath(file.path);
           if (isFolder) {
@@ -194,6 +282,13 @@ const FileTreeNode = ({
         showCreateFileNode && (
           <CreateFileNode onBlur={handleOnBlur} depth={depth} />
         )}
+
+      {newFolderDraft !== null &&
+        newFolderDraft.dir === file.path &&
+        showCreateFolderNode && (
+          <CreateFolderNode onBlur={handleFolderOnBlur} depth={depth} />
+        )}
+
       {isFolder && expandedPaths.has(file.path) && (
         <div role="group">
           {file.children!.map((child) => (
@@ -203,6 +298,7 @@ const FileTreeNode = ({
               depth={depth + 1}
               expandedPaths={expandedPaths}
               registerForPath={registerForPath}
+              onContextMenu={onContextMenu}
             />
           ))}
         </div>
