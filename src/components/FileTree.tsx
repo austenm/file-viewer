@@ -98,7 +98,6 @@ const FileTree = () => {
 
   return (
     <div className="h-full border border-r bg-neutral-800">
-
       <div className="flex my-1 pl-1">
         <span className="mt-1 font-bold text-[0.82rem] text-neutral-300">
           {reactTutorialFiles.name.toUpperCase()}

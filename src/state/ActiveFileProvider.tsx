@@ -12,6 +12,8 @@ import {
   getContent,
   getPathsSnapshot,
   hasPath,
+  renameFolder,
+  renamePath,
   setContent,
 } from '../lib/contentStore';
 import { pathToUri } from '../lib/monaco/model-utils';
@@ -19,6 +21,8 @@ import normalizePath from '../utils/normalizePath';
 import ancestorsOf from '../utils/ancestorsOf';
 import { validateFileName } from '../lib/validateFileName';
 import { buildPathName } from '../lib/buildPathName';
+import { validateFolderName } from '../lib/validateFolderName';
+
 
 type FileState = {
   activePath: string | null;
@@ -27,6 +31,8 @@ type FileState = {
   treeFocusPath: string | null;
   dirtyByPath: Map<string, boolean>;
   newDraft: { dir: string; name: string; error: string | null } | null;
+
+  renameDraft: { path: string; name: string; error: string | null } | null;
 };
 
 type FileActions = {
@@ -42,6 +48,10 @@ type FileActions = {
   setNewFileName: (name: string) => void;
   cancelNewFile: () => void;
   confirmNewFile: () => void;
+  beginRenameAt: (path: string) => void;
+  setRenameName: (name: string) => void;
+  cancelRename: () => void;
+  confirmRename: () => void;
 };
 
 // for seeding tests
@@ -101,8 +111,18 @@ const ActiveFileProvider = ({
     name: string;
     error: string | null;
   } | null>(null);
+
+  const [renameDraft, setRenameDraft] = useState<{
+    path: string;
+    name: string;
+    error: string | null;
+  } | null>(null);
+
+
   const dirtyRef = useRef(dirtyByPath);
   const pendingCreateRef = useRef<string | null>(null);
+  const pendingRenameRef = useRef<string | null>(null);
+  const oldNameRef = useRef<string | null>(null);
 
   const ensureExpandedUpTo = (path: string) => {
     const dirs = ancestorsOf(path).slice(0, -1);
@@ -116,6 +136,15 @@ const ActiveFileProvider = ({
   const isUnder = (candidate: string, base: string) => {
     const cNorm = normalizePath(candidate);
     const bNorm = normalizePath(base);
+    return cNorm === bNorm || cNorm.startsWith(bNorm + '/');
+  };
+
+  const hasDirtyUnder = (path: string) => {
+    for (const [p, dirty] of dirtyRef.current) {
+      if (dirty && isUnder(p, path)) return true;
+    }
+    return false;
+  };
 
   const openFileImpl = useCallback(
     (path: string) => {
@@ -128,6 +157,51 @@ const ActiveFileProvider = ({
     [ensureExpandedUpTo],
   );
 
+  const confirmRenameImpl = useCallback(
+    (oldPath: string, newPath: string) => {
+      let ok;
+      if (newPath.endsWith('/')) {
+        ok = renameFolder(oldPath, newPath);
+      } else {
+        ok = renamePath(oldPath, newPath);
+      }
+      if (!ok) return;
+
+      setDirtyByPath((prev) => {
+        const next = new Map(prev);
+        const wasDirty = !!next.get(oldPath);
+        next.delete(oldPath);
+        if (wasDirty) next.set(newPath, true);
+        return next;
+      });
+      setOpenPaths((prevTabs) =>
+        prevTabs.map((p) => (p === oldPath ? newPath : p)),
+      );
+      setActivePath((curr) => (curr === oldPath ? newPath : curr));
+      ensureExpandedUpTo(newPath);
+      setTreeFocusPath(newPath);
+    },
+    [ensureExpandedUpTo],
+  );
+  useEffect(() => {
+    const p = pendingCreateRef.current;
+    if (!p) return;
+    pendingCreateRef.current = null;
+
+    setContent(p, '');
+    openFileImpl(p);
+  }, [openFileImpl]);
+
+  useEffect(() => {
+    const newPathRef = pendingRenameRef.current;
+    const oldPathRef = oldNameRef.current;
+    if (!newPathRef || !oldPathRef) return;
+    pendingRenameRef.current = null;
+    oldNameRef.current = null;
+    confirmRenameImpl(oldPathRef, newPathRef);
+  }, [confirmRenameImpl]);
+
+
   const fileState = useMemo<FileState>(() => {
     return {
       activePath,
@@ -136,6 +210,7 @@ const ActiveFileProvider = ({
       treeFocusPath,
       dirtyByPath,
       newDraft,
+      renameDraft,
     };
   }, [
     activePath,
@@ -144,6 +219,7 @@ const ActiveFileProvider = ({
     treeFocusPath,
     dirtyByPath,
     newDraft,
+    renameDraft,
   ]);
 
   const fileActions = useMemo<FileActions>(
@@ -247,6 +323,57 @@ const ActiveFileProvider = ({
           if (err) return { ...prev, error: err };
 
           pendingCreateRef.current = fullPath;
+          return null;
+        });
+      },
+
+      beginRenameAt: (path: string) => {
+        const base = path.split('/').pop() ?? path;
+        setRenameDraft({ path, name: base, error: null });
+        setTreeFocusPath(path);
+      },
+
+      setRenameName: (name: string) => {
+        setRenameDraft((prev) =>
+          prev ? { ...prev, name, error: validateFileName(name) } : prev,
+        );
+        return;
+      },
+
+      cancelRename: () => setRenameDraft(null),
+
+      confirmRename: () => {
+        setRenameDraft((prev) => {
+          if (!prev) return prev;
+          const oldPath = normalizePath(prev.path);
+          const isRenameDir = !oldPath.includes('.');
+          const dir = oldPath.includes('/')
+            ? oldPath.slice(0, oldPath.lastIndexOf('/'))
+            : '';
+          let newPath = normalizePath(
+            dir ? `${dir}/${prev.name.trim()}` : prev.name.trim(),
+          );
+
+          if (isRenameDir) {
+            newPath = `${newPath}/`;
+            const err =
+              validateFolderName(newPath) ||
+              (newPath !== oldPath && folders.has(newPath)
+                ? 'Name already exists'
+                : null);
+            if (err) return { ...prev, error: err };
+          } else {
+            const err =
+              validateFileName(prev.name.trim()) ||
+              (newPath !== oldPath && hasPath(newPath)
+                ? 'Name already exists'
+                : null);
+            if (err) return { ...prev, error: err };
+          }
+
+          oldNameRef.current = oldPath;
+          pendingRenameRef.current = newPath;
+
           return null;
         });
       },
