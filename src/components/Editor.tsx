@@ -5,15 +5,10 @@ import { getOrCreateModel, releaseModel } from '../lib/monaco/model-utils';
 import { tabIdFromPath } from '../utils/ids';
 import { perf } from '../utils/perf';
 import { useResizeObserver } from '../hooks/useResizeObserver';
-import { useFileActions } from '../state/ActiveFileProvider';
+import { useFileActions, useFileState } from '../state/ActiveFileProvider';
 
-const Editor = ({
-  activePath,
-  onChange,
-}: {
-  activePath: string;
-  onChange?: (value: string) => void;
-}) => {
+const Editor = ({ onChange }: { onChange?: (value: string) => void }) => {
+  const { activePath } = useFileState();
   const { setIsDirty } = useFileActions();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -57,7 +52,7 @@ const Editor = ({
     // set up language model when filepath/content changes
     const editor = editorRef.current;
     if (!editor) return;
-    const model = getOrCreateModel(activePath, getContent);
+    const model = getOrCreateModel(activePath!, getContent);
 
     perf.mark('editor:model:set:start');
     editor.setModel(model);
@@ -71,7 +66,7 @@ const Editor = ({
     const sub = model.onDidChangeContent(() => {
       if (applyingExternalRef.current) return;
       const value = model.getValue();
-      setIsDirty(activePath, value !== getContent(activePath));
+      setIsDirty(activePath!, value !== getContent(activePath!));
       onChange?.(value);
     });
 
@@ -88,7 +83,7 @@ const Editor = ({
     <div
       role="tabpanel"
       id="editor-panel"
-      aria-labelledby={tabIdFromPath(activePath)}
+      aria-labelledby={tabIdFromPath(activePath!)}
       ref={containerRef}
       className="h-full w-full min-h-0"
     />
