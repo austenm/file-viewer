@@ -1,10 +1,10 @@
 import { describe, expect, test, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import user from '@testing-library/user-event';
-import Tabs from '../components/Tabs';
-import ActiveFileProvider from '../state/ActiveFileProvider';
-import { nextFrame } from '../test/utils';
-import { getAllTabs, oneTabbable } from '../test/utils';
+import Tabs from '../../components/Tabs';
+import ActiveFileProvider from '../../state/ActiveFileProvider';
+import { nextFrame } from '../../test/utils';
+import { getAllTabs, oneTabbable } from '../../test/utils';
 
 function TabsHarness({
   open = [
@@ -44,14 +44,12 @@ describe('Tabs - roving and activation', () => {
     (oneTabbable()[0] as HTMLElement).focus();
     expect(oneTabbable()[0]).toHaveFocus();
 
-    // ArrowRight moves focus only (not selection)
     await k('{ArrowRight}');
     const tabsAfter = getAllTabs();
     expect(oneTabbable()).toHaveLength(1);
     expect(
       tabsAfter.some((t) => t.getAttribute('aria-selected') === 'true'),
     ).toBe(true);
-    // Focus is on a tab, but aria-selected stays with the previously active one
     const focused = document.activeElement as HTMLElement;
     expect(focused).toHaveAttribute('role', 'tab');
   });
@@ -72,14 +70,14 @@ describe('Tabs - roving and activation', () => {
     render(<TabsHarness />);
     (oneTabbable()[0] as HTMLElement).focus();
 
-    await k('{ArrowRight}'); // move focus to a different tab
+    await k('{ArrowRight}');
     const focused = document.activeElement as HTMLElement;
     expect(focused).toHaveAttribute('role', 'tab');
     expect(focused).toHaveAttribute('aria-selected', 'false');
 
-    await k('{Enter}'); // activate
+    await k('{Enter}');
     expect(focused).toHaveAttribute('aria-selected', 'true');
-    expect(focused).toHaveFocus(); // focus stays put
+    expect(focused).toHaveFocus();
   });
 
   test('Delete closes the focused tab and moves focus to its neighbor', async () => {
@@ -93,9 +91,7 @@ describe('Tabs - roving and activation', () => {
 
     await k('{Delete}');
     const tabs1 = getAllTabs();
-    // One fewer tab
     expect(tabs1.length).toBe(tabs0.length - 1);
-    // Focus moved to neighbor (same index now points at the next one)
     const neighbor = tabs1[Math.min(beforeIdx, tabs1.length - 1)];
     expect(neighbor).toHaveFocus();
   });
@@ -115,17 +111,14 @@ describe('Tabs - roving and activation', () => {
     render(<TabsHarness />);
     const all = getAllTabs();
 
-    // spy on scrollIntoView for a far tab
     const far = all.at(-1)! as HTMLElement;
     const spy = vi
       .spyOn(far, 'scrollIntoView' as any)
       .mockImplementation(() => {});
 
-    // move focus to far tab then activate with Enter
     far.focus();
     await k('{Enter}');
 
-    // effect runs in rAF; give it a tick
     await new Promise((r) => requestAnimationFrame(() => r(undefined)));
     expect(spy).toHaveBeenCalled();
 
