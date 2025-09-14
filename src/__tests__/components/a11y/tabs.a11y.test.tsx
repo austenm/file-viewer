@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
-import Tabs from '../components/Tabs';
-// import { useState } from 'react';
-import ActiveFileProvider from '../state/ActiveFileProvider';
+import Tabs from '../../../components/Tabs';
+import ActiveFileProvider from '../../../state/ActiveFileProvider';
 
 describe('Tabs a11y semantics', () => {
   function TabsHarness({
