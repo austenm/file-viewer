@@ -464,6 +464,18 @@ const ActiveFileProvider = ({
           return next;
         });
 
+        setExpandedPaths((prev) => {
+          const next = new Set(prev);
+          for (const p of Array.from(next)) {
+            if (isUnder(p, pNorm)) next.delete(p);
+          }
+          return next;
+        });
+
+        setTreeFocusPath((curr) =>
+          curr && isUnder(curr, pNorm) ? null : curr,
+        );
+
         deleteTree(pNorm);
       },
 
