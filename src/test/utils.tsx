@@ -1,5 +1,15 @@
+import { type ReactNode, useEffect, useLayoutEffect, useRef } from 'react';
+import ActiveFileProvider, {
+  useFileActions,
+  useFileState,
+} from '../state/ActiveFileProvider';
 import { expect } from 'vitest';
-import { within, screen } from '@testing-library/react';
+import {
+  within,
+  screen,
+  render,
+  type RenderResult,
+} from '@testing-library/react';
 
 export const getTree = () => screen.getByRole('tree', { name: /files/i });
 export const getItems = () => within(getTree()).getAllByRole('treeitem');
@@ -31,3 +41,31 @@ export const getTabs = () =>
 export const getAllTabs = () => within(getTabs()).getAllByRole('tab');
 export const oneTabbable = () =>
   getAllTabs().filter((el) => (el as HTMLElement).tabIndex === 0);
+
+export function renderWithProvider(ui: ReactNode): RenderResult {
+  return render(<ActiveFileProvider>{ui}</ActiveFileProvider>);
+}
+
+type ProviderAPI = {
+  actions: ReturnType<typeof useFileActions>;
+  getState: () => ReturnType<typeof useFileState>;
+};
+
+export function Probe({ onReady }: { onReady: (api: ProviderAPI) => void }) {
+  const actions = useFileActions();
+  const state = useFileState();
+  const stateRef = useRef(state);
+  useLayoutEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useLayoutEffect(() => {
+    onReady({
+      actions,
+      getState: () => stateRef.current,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
+}
