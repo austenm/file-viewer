@@ -1,26 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import user from '@testing-library/user-event';
-import ActiveFileProvider from '../state/ActiveFileProvider';
-import { FileTree } from '../components';
+import ActiveFileProvider from '../../../state/ActiveFileProvider';
+import { FileTree } from '../../../components';
 
 import {
   focusFirstTabbable,
   expectOneTabbable,
   getItems,
   nextFrame,
-} from '../test/utils';
+} from '../../../test/utils';
 
 describe('FileTreeNode a11y semantics', () => {
-  const project = {
-    name: 'test-project',
-    files: [
-      { path: 'app/README.md' },
-      { path: 'app/src/index.ts' },
-      { path: 'app/public/favicon.ico' },
-    ],
-  };
-
   function TreeHarness() {
     return (
       <ActiveFileProvider>
@@ -116,13 +107,13 @@ describe('FileTreeNode a11y semantics', () => {
     };
 
     focusFirstTabbable();
-    await k('{ArrowRight}'); // to child
+    await k('{ArrowRight}');
     const child = document.activeElement as HTMLElement;
     expect(child).toHaveAttribute('aria-expanded', 'false');
-    await k(' '); // toggle dir
+    await k(' ');
     expect(child).toHaveAttribute('aria-expanded', 'true');
-    await k('{ArrowDown}'); // to file
-    await k('{Enter}'); // select
+    await k('{ArrowDown}');
+    await k('{Enter}');
     const focused = document.activeElement as HTMLElement;
     expect(focused).toHaveAttribute('aria-selected', 'true');
   });

@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import useFilesList from '../hooks/useFilesList';
+import useFilesList from '../../hooks/useFilesList';
 import {
   __resetStoreForTests,
   setContent,
   deleteContent,
-} from '../lib/contentStore';
+} from '../../lib/contentStore';
 
 beforeEach(() => {
   __resetStoreForTests({
