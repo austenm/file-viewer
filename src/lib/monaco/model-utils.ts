@@ -23,9 +23,8 @@ export const langFromExt = (path: string) => {
   }
 };
 
-const encodePath = (path: string) => {
+const encodePath = (path: string) =>
   normalizePath(path).split('/').map(encodeURIComponent).join('/');
-};
 
 export const pathToUri = (path: string) =>
   monaco.Uri.parse(`inmem:/${encodePath(path)}`);
