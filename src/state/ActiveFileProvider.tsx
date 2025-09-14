@@ -146,6 +146,12 @@ const ActiveFileProvider = ({
     });
   };
 
+  const joinDir = (dir: string, rest: string) => {
+    const base = normalizePath(dir).replace(/\/+$/, '');
+    const tail = (rest ?? '').replace(/^\/+/, '');
+    return tail ? `${base}/${tail}` : base;
+  };
+
   const isUnder = (candidate: string, base: string) => {
     const cNorm = normalizePath(candidate);
     const bNorm = normalizePath(base);
@@ -177,27 +183,78 @@ const ActiveFileProvider = ({
 
   const confirmRenameImpl = useCallback(
     (oldPath: string, newPath: string) => {
-      let ok;
-      if (newPath.endsWith('/')) {
-        ok = renameFolder(oldPath, newPath);
-      } else {
-        ok = renamePath(oldPath, newPath);
-      }
+      const oldB = normalizePath(oldPath);
+      const isDirDraft = newPath.endsWith('/');
+      const newB = normalizePath(newPath);
+
+      const ok = isDirDraft ? renameFolder(oldB, newB) : renamePath(oldB, newB);
       if (!ok) return;
+
+      const suffixAfter = (base: string, full: string) =>
+        full === base ? '' : full.slice(base.length + 1);
 
       setDirtyByPath((prev) => {
         const next = new Map(prev);
-        const wasDirty = !!next.get(oldPath);
-        next.delete(oldPath);
-        if (wasDirty) next.set(newPath, true);
+        if (isDirDraft) {
+          for (const [p, dirty] of prev) {
+            if (!dirty) continue;
+            if (isUnder(p, oldB)) {
+              next.delete(p);
+              const suffix = suffixAfter(oldB, p);
+              next.set(suffix ? `${newB}/${suffix}` : newB, true);
+            }
+          }
+        } else {
+          const was = !!next.get(oldB);
+          next.delete(oldB);
+          if (was) next.set(newB, true);
+        }
         return next;
       });
-      setOpenPaths((prevTabs) =>
-        prevTabs.map((p) => (p === oldPath ? newPath : p)),
+
+      setOpenPaths((prev) =>
+        isDirDraft
+          ? prev.map((p) => {
+              if (!isUnder(p, oldB)) return p;
+              const suffix = suffixAfter(oldB, p);
+              return suffix ? `${newB}/${suffix}` : newB;
+            })
+          : prev.map((p) => (p === oldB ? newB : p)),
       );
-      setActivePath((curr) => (curr === oldPath ? newPath : curr));
-      ensureExpandedUpTo(newPath);
-      setTreeFocusPath(newPath);
+
+      setActivePath((curr) => {
+        if (!curr) return curr;
+        if (!isDirDraft) return curr === oldB ? newB : curr;
+        if (!isUnder(curr, oldB)) return curr;
+        const suffix = suffixAfter(oldB, curr);
+        return suffix ? `${newB}/${suffix}` : newB;
+      });
+
+      setExpandedPaths((prev) => {
+        const next = new Set<string>();
+        for (const p of prev) {
+          if (isDirDraft && isUnder(p, oldB)) {
+            const suffix = suffixAfter(oldB, p);
+            next.add(suffix ? `${newB}/${suffix}` : newB);
+          } else if (!isDirDraft && p === oldB) {
+            next.add(newB);
+          } else {
+            next.add(p);
+          }
+        }
+        return next;
+      });
+
+      setTreeFocusPath((path) => {
+        if (!path) return path;
+        if (!isDirDraft) return path === oldB ? newB : path;
+        if (!isUnder(path, oldB)) return path;
+        const suffix = suffixAfter(oldB, path);
+        return suffix ? `${newB}/${suffix}` : newB;
+      });
+
+      ensureExpandedUpTo(newB);
+      setTreeFocusPath(newB);
     },
     [ensureExpandedUpTo],
   );
