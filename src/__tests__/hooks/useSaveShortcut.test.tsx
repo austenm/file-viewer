@@ -1,7 +1,6 @@
-// src/hooks/useSaveShortcut.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
-import useSaveShortcut from '../hooks/useSaveShortcut';
+import { render, renderHook, act } from '@testing-library/react';
+import useSaveShortcut from '../../hooks/useSaveShortcut';
 
 function Harness({
   enabled,
@@ -22,7 +21,6 @@ const fireKey = (init: KeyboardEventInit) => {
 
 describe('useSaveShortcut', () => {
   beforeEach(() => {
-    // ensure focus not in an input/textarea
     (document.activeElement as HTMLElement | null)?.blur?.();
   });
 
@@ -51,5 +49,24 @@ describe('useSaveShortcut', () => {
     render(<Harness enabled={true} onSave={spy} />);
     fireKey({ key: 's', metaKey: true, repeat: true });
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('triggers on Meta+S and Ctrl+S (lines 26–27)', () => {
+    const cb = vi.fn();
+    renderHook(() => useSaveShortcut(true, cb));
+
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 's', metaKey: true }),
+      );
+    });
+    expect(cb).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 's', ctrlKey: true }),
+      );
+    });
+    expect(cb).toHaveBeenCalledTimes(2);
   });
 });
