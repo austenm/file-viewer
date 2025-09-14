@@ -1,12 +1,11 @@
-// src/__tests__/ActiveFileProvider.newFile.test.tsx
 import { describe, it, expect } from 'vitest';
 import { useEffect } from 'react';
 import { render, screen } from '@testing-library/react';
 import ActiveFileProvider, {
   useFileActions,
   useFileState,
-} from '../state/ActiveFileProvider';
-import { getContent, hasPath } from '../lib/contentStore';
+} from '../../state/ActiveFileProvider';
+import { getContent, hasPath } from '../../lib/contentStore';
 
 function DriveNewFile({ dir, name }: { dir: string; name: string }) {
   const { beginNewFileAt, setNewFileName, confirmNewFile } = useFileActions();
@@ -37,7 +36,7 @@ describe('ActiveFileProvider new file', () => {
     const expected = 'app/newfile.test.md';
 
     expect(hasPath(expected)).toBe(true);
-    expect(getContent(expected)).toBe(''); // committed empty content
+    expect(getContent(expected)).toBe('');
 
     expect(screen.getByTestId('active').textContent).toBe(expected);
     expect(screen.getByTestId('open').textContent).toContain(expected);
