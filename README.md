@@ -1,13 +1,13 @@
-# file-viewer (VS-style)
+# File Viewer (React + Monaco)
 
-A small file viewer inspired by the CoderPad “File Tree” prompt, with a modern stack and nicer UX.
+A lightweight VS Code-style file viewer/editor with tabs, a keyboard-driven file tree, and local persistence
 
 ## Demo
 
 > ![](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTk4dmM0cmtwZXJleXZ4bm5qN2l5ZmN6Y3U4Nm5nYm1nODhkdXV3ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IxIVBjD6c2neTazyXz/giphy.gif)  
 > [Link to live example](https://file-viewer-topaz.vercel.app/)
 
-## Stack
+## 🥞 Stack
 
 - **React + TypeScript** (functional components, Context for state)
 - **Vite + SWC** (fast dev/build)
@@ -16,22 +16,29 @@ A small file viewer inspired by the CoderPad “File Tree” prompt, with a mode
 - **SETI Icons** for file/folder theming
 - **react-resizable-panels** for adjustable layout
 
-## Features
+## ✨ Features
+- Monaco editor (dark theme), per-file models with ref-counting
+- Dirty indicators + Save (⌘/Ctrl+S), toast, and `beforeunload` safety
+- Context menu: New File / New Folder / Rename / Delete
+- File tree derived from a store snapshot; empty folders supported
+- Local persistence via `localStorage` (`fv:files:v1`)
+- Accessible tree navigation (Arrow keys, Home/End, Space/Enter, Shift+F10)
 
-- Recursive **file tree** from flat paths → tree (no prop drilling)
-- **Active file** managed via Context (`activePath`)
-- **Read-only editor** with Monaco (syntax-highlight focus)
-- **Resizable** explorer/editor panels
-- Familiar **SETI** file type icons
+## 🏗️ Architecture
+- **contentStore**: `byPath: Map<string,string>`, `folders: Set<string>` (canonical, no trailing `/`), emits a sorted `pathsSnapshot` (folders gain `/` *only* when emitted). Batched ops: `deleteTree`, `renameFolder`.
+- **useFilesList**: `useSyncExternalStore` subscriber to `pathsSnapshot`.
+- **buildTree**: treats any path ending with `/` as an explicit, possibly empty folder.
+- **ActiveFileProvider**: app state (active/open/expanded, `dirtyByPath`, drafts for new file/folder/rename), actions (create/rename/delete, save, guards). Uses refs to avoid stale closures.
+- **Editor**: Monaco instance; models acquired/released via a small registry; resize observer.
 
-## Getting started
+## 🚀 Getting started
 
 ```bash
 # prerequisites: Node 18+; pnpm (or npm/yarn)
-pnpm i
+pnpm i            # or npm i / yarn
 pnpm dev          # start vite dev server
+pnpm test         # run unit tests (vitest + RTL)
 pnpm build        # production build
-pnpm preview      # preview the build
 ```
 
 ## Project Structure
@@ -50,32 +57,30 @@ src/
     normalizePath.ts          # normalizePath, small pure helpers
 ```
 
-## How it works
+## 🖱️ Keyboard & UI
 
-- The app starts with a flat list of files (path + content).
+- Tree: ↑/↓ move, → expand/into first child, ← collapse/up, Home/End start/end, Space/Enter toggle/open
+- Context Menu: Right-click or Shift+F10, Esc to close
+- Save: ⌘/Ctrl+S (blocked in inputs), shows “Saved” toast
+- Tabs: close button, dirty dot (unsaved)
 
-- buildTree converts that list into a nested structure for the explorer.
+## 💾 Persistence
 
-- Clicking a file sets activePath via the Context provider, and the Editor swaps to the corresponding Monaco model.
+State is saved to localStorage under the key fv:files:v1 (debounced). On first load, demo files seed the store.
 
-- Monaco is configured for syntax highlighting; semantic typechecking is intentionally dialed down to keep the demo clean.
+## 🧪 Testing
 
-Note on Monaco: the worker setup lives in lib/monaco/setup.ts and is imported first in main.tsx. Models use URIs that end with the real filename (e.g. .tsx) so TSX highlights properly.
+- Unit tests for the store, hooks, and provider
+- RTL tests for the tree, context menu, and inline editors
+- Monaco + ResizeObserver are mocked in tests
 
-## Design choices
+## ⚠️ Limitations / Roadmap
 
-- Keep state light in Context (just activePath); treat Monaco models as the source of truth for text.
+- No backend; persistence is local only
+- Single editor pane (no split view)
+- Monaco language services are minimal for now
+- Future: multi-window, rename validations for complex cases, import/export, basic search
 
-- Prefer pure helpers in utils/ and editor-specific helpers in lib/monaco/.
+## 📄 License
 
-- SETI icons are used as recommended by the package; the SVG is inserted into a controlled wrapper.
-
-## Roadmap
-
-- [ ] Add / edit / save files (mirror Monaco models → contentStore, optional localStorage)
-
-- [X] Multiple tabs with close/neighbor-select behavior
-
-- [ ] More file types (extend langFromExt)
-
-- [ ] Optional semantic typechecking in Monaco with virtual .d.ts shims
+MIT
