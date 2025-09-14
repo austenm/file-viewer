@@ -54,7 +54,7 @@ function App() {
               <div className="flex flex-col h-full w-full min-h-0">
                 <Tabs />
                 <Breadcrumbs path={activePath!} />
-                <Editor activePath={activePath!} />
+                <Editor />
               </div>
             </ErrorBoundary>
           )}
