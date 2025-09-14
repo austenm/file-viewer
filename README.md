@@ -4,7 +4,7 @@ A lightweight VS Code-style file viewer/editor with tabs, a keyboard-driven file
 
 ## Demo
 
-> ![](https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTk4dmM0cmtwZXJleXZ4bm5qN2l5ZmN6Y3U4Nm5nYm1nODhkdXV3ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/IxIVBjD6c2neTazyXz/giphy.gif)  
+> ![](https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2FvdDJsaWoxNHkxc3kxN2gwY3hicmVhNHlmd3g2Z3c0MnVjaXd3diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Sk76dkSA0FIoVhZDyO/giphy.gif)  
 > [Link to live example](https://file-viewer-topaz.vercel.app/)
 
 ## 🥞 Stack
