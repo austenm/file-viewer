@@ -5,14 +5,10 @@ const byPath = new Map<string, string>();
 export const folders = new Set<string>();
 const listeners = new Set<() => void>();
 
-for (const f of files.files) {
-  byPath.set(normalizePath(f.path), f.content ?? '');
-}
-
 let pathsSnapshot: string[] = [];
 const recomputePathsSnapshot = () => {
   pathsSnapshot = [
-    ...Array.from(folders).map((f) => (f.endsWith('/') ? f : f + '/')),
+    ...Array.from(folders).map((f) => `${f}/`),
     ...Array.from(byPath.keys()),
   ].sort();
 };
@@ -35,6 +31,7 @@ export const setContent = (p: string, text: string) => {
     emit();
   }
   schedulePersist();
+  onUserMutation();
 };
 
 export const deleteContent = (p: string) => {
@@ -44,6 +41,7 @@ export const deleteContent = (p: string) => {
     emit();
   }
   schedulePersist();
+  onUserMutation();
 };
 
 export const renamePath = (oldPathRaw: string, newPathRaw: string) => {
@@ -56,6 +54,7 @@ export const renamePath = (oldPathRaw: string, newPathRaw: string) => {
   recomputePathsSnapshot();
   emit();
   schedulePersist();
+  onUserMutation();
   return true;
 };
 
@@ -78,26 +77,25 @@ export const addFolder = (dirPath: string) => {
     emit();
   }
   schedulePersist();
+  onUserMutation();
 };
 
 export const deleteTree = (baseRaw: string) => {
   const base = normalizePath(baseRaw);
+  const prefix = base + '/';
   let changed = false;
 
-  // delete the file itself (if base is a file)
   if (byPath.delete(base)) changed = true;
 
-  // delete all files under base as a folder
   for (const p of Array.from(byPath.keys())) {
-    if (isUnder(p, base) && p !== base) {
+    if (p.startsWith(prefix)) {
       byPath.delete(p);
       changed = true;
     }
   }
 
-  // delete the folder entry and any subfolders
   for (const f of Array.from(folders)) {
-    if (isUnder(f, base)) {
+    if (f === base || f.startsWith(prefix)) {
       folders.delete(f);
       changed = true;
     }
@@ -107,6 +105,7 @@ export const deleteTree = (baseRaw: string) => {
     recomputePathsSnapshot();
     emit();
     schedulePersist();
+    onUserMutation();
   }
 };
 
@@ -114,7 +113,17 @@ export const renameFolder = (oldDirRaw: string, newDirRaw: string) => {
   const oldDir = normalizePath(oldDirRaw);
   const newDir = normalizePath(newDirRaw);
 
-  if (!folders.has(oldDir) || folders.has(newDir)) return false;
+  const hasFilesUnderOld = Array.from(byPath.keys()).some((p) =>
+    p.startsWith(oldDir + '/'),
+  );
+  const hasFoldersUnderOld =
+    folders.has(oldDir) ||
+    Array.from(folders).some((f) => f.startsWith(oldDir + '/'));
+
+  if (!hasFilesUnderOld && !hasFoldersUnderOld) return false;
+  if (folders.has(newDir)) return false;
+  if (oldDir === newDir) return true;
+
   for (const p of Array.from(byPath.keys())) {
     if (isUnder(p, oldDir)) {
       const moved = newDir + p.slice(oldDir.length);
@@ -136,21 +145,42 @@ export const renameFolder = (oldDirRaw: string, newDirRaw: string) => {
   recomputePathsSnapshot();
   emit();
   schedulePersist();
+  onUserMutation();
   return true;
 };
 
+const SEED_KEY = 'fv:files:v1';
+const SEEDED_FLAG = 'fv:seeded:v1';
+
 let timer: number | null = null;
-const schedulePersist = () => {
-  if (typeof window === 'undefined') return;
-  if (timer) window.clearTimeout(timer);
+
+function persist() {
+  const data = {
+    files: Object.fromEntries(byPath),
+    folders: Array.from(folders),
+  };
+  localStorage.setItem(SEED_KEY, JSON.stringify(data));
+}
+
+export function persistNow() {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  persist();
+}
+
+export function schedulePersist(delay = 250) {
+  if (timer) clearTimeout(timer);
   timer = window.setTimeout(() => {
-    const data = {
-      files: Object.fromEntries(byPath),
-      folders: Array.from(folders ?? []),
-    };
-    localStorage.setItem('fv:files:v1', JSON.stringify(data));
-  }, 200);
-};
+    timer = null;
+    persist();
+  }, delay);
+}
+
+function onUserMutation() {
+  localStorage.setItem('fv:seeded:v1', '1');
+}
 
 let initialized = false;
 
@@ -160,7 +190,9 @@ let initialized = false;
 
   try {
     if (typeof window !== 'undefined') {
-      const raw = localStorage.getItem('fv:files:v1');
+      const raw = localStorage.getItem(SEED_KEY);
+      const seeded = localStorage.getItem(SEEDED_FLAG) === '1';
+
       if (raw) {
         const { files, folders: fs } = JSON.parse(raw);
         if (files) {
@@ -169,27 +201,33 @@ let initialized = false;
           }
         }
         if (Array.isArray(fs)) {
-          fs.forEach((f) => folders.add(`${normalizePath(f)}/`));
+          fs.forEach((f) => folders.add(normalizePath(f)));
+
+          for (const f of Array.from(folders)) {
+            const norm = normalizePath(f);
+            if (f !== norm) {
+              folders.delete(f);
+              folders.add(norm);
+            }
+          }
         }
-      } else {
-        // seed demo data if no LS payload
+      } else if (!seeded) {
         for (const f of files.files) {
           byPath.set(normalizePath(f.path), f.content ?? '');
         }
       }
+      localStorage.setItem(SEEDED_FLAG, '1');
+      persistNow();
     } else {
-      // SSR/test environment: seed demo data
-      for (const f of files.files) {
-        byPath.set(normalizePath(f.path), f.content ?? '');
-      }
     }
   } catch {
-    // on parse error, fall back to seed
     for (const f of files.files) {
       byPath.set(normalizePath(f.path), f.content ?? '');
     }
+    localStorage?.setItem?.(SEEDED_FLAG, '1');
+    persistNow?.();
   } finally {
-    recomputePathsSnapshot(); // exactly once after hydrate/seed
+    recomputePathsSnapshot();
   }
 })();
 
@@ -197,6 +235,7 @@ export function __resetStoreForTests(opts?: {
   files?: Array<{ path: string; content?: string }>;
   folders?: string[];
   clearLocalStorage?: boolean;
+  seedDemo?: boolean;
 }) {
   if (opts?.clearLocalStorage && typeof window !== 'undefined') {
     try {
@@ -206,7 +245,11 @@ export function __resetStoreForTests(opts?: {
   byPath.clear();
   folders.clear();
 
-  if (opts?.folders) {
+  if (opts?.seedDemo) {
+    for (const f of files.files) {
+      byPath.set(normalizePath(f.path), f.content ?? '');
+    }
+  } else if (opts?.folders) {
     for (const f of opts.folders)
       folders.add(normalizePath(f).replace(/\/+$/, ''));
   }
