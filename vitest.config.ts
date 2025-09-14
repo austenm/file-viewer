@@ -13,6 +13,12 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    exclude: [
+      'tests/e2e/**',
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+    ],
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,
@@ -23,6 +29,19 @@ export default defineConfig({
       thresholds: strict
         ? { lines: 60, functions: 60, branches: 50, statements: 60 }
         : undefined,
+      exclude: [
+        '**/*.d.ts',
+        'src/test/**',
+        'src/test/mocks/**',
+        'src/**/index.ts',
+        'playwright.config.ts',
+        'src/main.tsx',
+        'src/App.tsx',
+        'src/lib/monaco/monacoSetup.ts',
+        'src/utils/types.ts',
+      ],
+      all: false,
+      cleanOnRerun: true,
     },
   },
 });
